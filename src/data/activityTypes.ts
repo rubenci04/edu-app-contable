@@ -27,13 +27,16 @@ export interface Activity {
   documentMark: string;
   source: string;
   statement: string[];
-  issuer: { name: string; address: string; taxId: string };
+  issuer: { name: string; address?: string; taxId?: string };
   fields: ActivityField[];
   items: ActivityItem[];
   totals: ActivityField[];
+  headFieldCount?: number;
+  sectionTitle?: string;
   theoryPath: string;
   nextId?: string;
   teacherReviewNote?: string;
+  teacherReviewTitle?: string;
 }
 
 export interface Feedback {

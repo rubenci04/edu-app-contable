@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { ArrowRight, BookOpen, CheckCircle2, ClipboardList, LockKeyhole, RotateCcw, Save, SearchCheck } from 'lucide-react';
+import { ArrowRight, BookOpen, CheckCircle2, ClipboardList, RotateCcw, Save, SearchCheck } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, PageHeader } from '../components/ui';
 import { activities, allActivityFields, getActivity } from '../data/activities';
@@ -9,27 +9,24 @@ import { useLocalProgress } from '../hooks/useLocalProgress';
 import { validateActivity } from '../lib/activityValidation';
 import { patrimonyActivities, patrimonyPath } from '../data/patrimonyActivities';
 
-const upcoming = ['Factura B', 'Factura C', 'Nota de débito', 'Nota de crédito', 'Recibo', 'Pagaré', 'Cheque'];
 export const activityPath = (id: string) => `/practicar/${id}`;
 
 export function PracticePage() {
   const { progress, storageError } = useLocalProgress();
   return <>
     <PageHeader eyebrow="PRACTICAMOS" title="De la lectura a la práctica." description="Leé cada situación, completá el comprobante y comprobá tus respuestas." />
-    <div className="section-heading compact"><h2>Actividades disponibles</h2><span className="muted">3 documentos</span></div>
+    <div className="section-heading compact"><h2>Documentos comerciales</h2><span className="muted">{activities.length} actividades</span></div>
     <div className="practice-grid">{activities.map((activity, index) => {
       const record = progress.activities[activity.id];
       const status = record?.completed ? 'Completada' : record?.readyForReview ? 'Revisión docente' : record?.started ? 'En curso' : 'Por empezar';
-      return <Link to={activityPath(activity.id)} key={activity.id} className="practice-link"><Card className="practice-tile"><span className="practice-icon"><ClipboardList size={25} /></span><span className="practice-step">ACTIVIDAD 0{index + 1}</span><h3>{activity.title}</h3><p>Completá el documento de la situación de Pisapapeles.</p><span className="practice-status">{status}</span><span className="practice-open">Abrir actividad <ArrowRight size={17} /></span></Card></Link>;
+      return <Link to={activityPath(activity.id)} key={activity.id} className="practice-link"><Card className="practice-tile"><span className="practice-icon"><ClipboardList size={25} /></span><span className="practice-step">ACTIVIDAD {String(index + 1).padStart(2, '0')}</span><h3>{activity.title}</h3><p>{activity.statement[0]}</p><span className="practice-status">{status}</span><span className="practice-open">Abrir actividad <ArrowRight size={17} /></span></Card></Link>;
     })}</div>
     <div className="section-heading compact"><h2>Patrimonio</h2><span className="muted">4 ejercicios</span></div>
     <div className="practice-grid">{patrimonyActivities.map((activity, index) => {
       const record = progress.activities[activity.id];
       return <Link to={patrimonyPath(activity.id)} key={activity.id} className="practice-link"><Card className="practice-tile"><span className="practice-icon"><ClipboardList size={25} /></span><span className="practice-step">PATRIMONIO 0{index + 1}</span><h3>{activity.title}</h3><p>{activity.instruction}</p><span className="practice-status">{record?.completed ? 'Completada' : record?.started ? 'En curso' : 'Por empezar'}</span><span className="practice-open">Abrir ejercicio <ArrowRight size={17} /></span></Card></Link>;
     })}</div>
-    <div className="section-heading compact"><h2>Próximamente</h2></div>
-    <Card className="upcoming-list">{upcoming.map(title => <div key={title}><LockKeyhole size={16} aria-hidden="true" /><span>{title}</span><small>Próximamente</small></div>)}</Card>
-    <p className="source-note">Los documentos provienen de las páginas 1 a 3 de «DOCUMENTOS COMERCIALES PDF.pdf». Los ejercicios de patrimonio provienen de «Teoria_documentos_comerciales_y_patrimonio.docx».</p>
+    <p className="source-note">Los documentos provienen de «DOCUMENTOS COMERCIALES PDF.pdf». Los ejercicios de patrimonio provienen de «Teoria_documentos_comerciales_y_patrimonio.docx».</p>
     {storageError && <p className="storage-warning" role="status">Tu navegador no permite guardar el progreso local. Podés usar las actividades, pero el borrador podría perderse al actualizar.</p>}
   </>;
 }
@@ -49,13 +46,12 @@ export function FieldControl({ field, value, onChange, result }: { field: Activi
 
 function ActivityDocument({ activity, answers, onAnswer, result }: { activity: Activity; answers: Answers; onAnswer: (id: string, value: string) => void; result: ValidationResult | null }) {
   const control = (field: ActivityField) => <FieldControl key={field.id} field={field} value={answers[field.id] ?? ''} onChange={value => onAnswer(field.id, value)} result={result} />;
+  const headCount = activity.headFieldCount ?? (activity.id === 'factura-a' ? 3 : 2);
   return <Card className="document-sheet">
-    <div className="document-head"><div className="document-issuer"><strong>{activity.issuer.name}</strong><span>{activity.issuer.address}</span><span>CUIT: {activity.issuer.taxId}</span></div><div className="document-type"><span className="document-mark">{activity.documentMark}</span><strong>{activity.documentType}</strong></div></div>
-    <div className="document-main-fields">{activity.fields.slice(0, activity.id === 'factura-a' ? 3 : 2).map(control)}</div>
-    <div className="document-divider" /><h2>Datos del {activity.id === 'orden-de-compra' ? 'proveedor' : 'cliente'}</h2>
-    <div className="document-field-grid">{activity.fields.slice(activity.id === 'factura-a' ? 3 : 2).map(control)}</div>
-    <div className="document-divider" /><h2>Artículos</h2>
-    <div className="document-items">{activity.items.map((line, index) => <fieldset className="document-item" key={line.id}><legend>{line.label}</legend><div className="item-fields">{line.fields.map(control)}</div><span className="item-index">{String(index + 1).padStart(2, '0')}</span></fieldset>)}</div>
+    <div className="document-head"><div className="document-issuer"><strong>{activity.issuer.name}</strong>{activity.issuer.address && <span>{activity.issuer.address}</span>}{activity.issuer.taxId && <span>CUIT: {activity.issuer.taxId}</span>}</div><div className="document-type">{activity.documentMark && <span className="document-mark">{activity.documentMark}</span>}<strong>{activity.documentType}</strong></div></div>
+    <div className="document-main-fields">{activity.fields.slice(0, headCount).map(control)}</div>
+    {activity.fields.length > headCount && <><div className="document-divider" /><h2>{activity.sectionTitle ?? `Datos del ${activity.id === 'orden-de-compra' ? 'proveedor' : 'cliente'}`}</h2><div className="document-field-grid">{activity.fields.slice(headCount).map(control)}</div></>}
+    {activity.items.length > 0 && <><div className="document-divider" /><h2>{activity.items.length === 1 ? 'Detalle' : 'Artículos'}</h2><div className="document-items">{activity.items.map((line, index) => <fieldset className="document-item" key={line.id}><legend>{line.label}</legend><div className={`item-fields${line.fields.length < 4 ? ' item-fields-short' : ''}`}>{line.fields.map(control)}</div><span className="item-index">{String(index + 1).padStart(2, '0')}</span></fieldset>)}</div></>}
     {activity.totals.length > 0 && <><div className="document-divider" /><div className="document-totals">{activity.totals.map(control)}</div></>}
   </Card>;
 }
@@ -95,10 +91,10 @@ function ActivityForm({ activity }: { activity: Activity }) {
     <Card className="activity-statement"><span className="eyebrow">SITUACIÓN · {activity.source}</span><h2>Datos de la actividad</h2>{activity.statement.map(paragraph => <p key={paragraph}>{paragraph}</p>)}</Card>
     <div className="activity-meta"><span>{record?.completed ? <><CheckCircle2 size={17} /> Completada</> : record?.readyForReview ? 'Campos verificables correctos · revisión docente' : 'Borrador local'}</span><span>{fieldCount} campos verificables · {record?.attempts ?? 0} intentos</span></div>
     <ActivityDocument activity={activity} answers={answers} onAnswer={setAnswer} result={result} />
-    {activity.teacherReviewNote && <div className="teacher-review"><strong>IVA y total pendientes de indicación docente</strong><p>La actividad no especifica la tasa de IVA aplicable. Estos campos pueden completarse, pero no se corrigen automáticamente ni permiten marcar la factura como terminada.</p></div>}
-    {result && <div className={`activity-feedback ${result.correct ? 'is-correct' : 'has-errors'}`} role="status" aria-live="polite"><strong>{result.correct ? result.needsTeacherReview ? 'Los campos verificables están correctos.' : '¡Muy bien! Completaste correctamente el documento.' : `Hay ${result.feedback.length} ${result.feedback.length === 1 ? 'campo para revisar' : 'campos para revisar'}.`}</strong><p>{result.correct ? result.needsTeacherReview ? 'IVA y total necesitan confirmación docente antes de dar por terminada la Factura A.' : 'Tu progreso quedó guardado en este dispositivo.' : 'Encontrarás una pista debajo de cada campo que necesita corrección.'}</p></div>}
+    {activity.teacherReviewNote && <div className="teacher-review"><strong>{activity.teacherReviewTitle ?? 'Campos pendientes de indicación docente'}</strong><p>{activity.teacherReviewNote.replace(/^TODO_TEACHER_CONFIRMATION:\s*/, '')}</p></div>}
+    {result && <div className={`activity-feedback ${result.correct ? 'is-correct' : 'has-errors'}`} role="status" aria-live="polite"><strong>{result.correct ? result.needsTeacherReview ? 'Los campos verificables están correctos.' : '¡Muy bien! Completaste correctamente el documento.' : `Hay ${result.feedback.length} ${result.feedback.length === 1 ? 'campo para revisar' : 'campos para revisar'}.`}</strong><p>{result.correct ? result.needsTeacherReview ? 'Los campos señalados necesitan confirmación docente antes de dar por terminada la actividad.' : 'Tu progreso quedó guardado en este dispositivo.' : 'Encontrarás una pista debajo de cada campo que necesita corrección.'}</p></div>}
     <div className="activity-actions"><Button type="button" onClick={check}><SearchCheck size={18} /> COMPROBAR</Button><Button type="button" className="button-secondary" onClick={() => navigate(activity.nextId ? activityPath(activity.nextId) : '/practicar')}><Save size={18} /> GUARDAR Y CONTINUAR</Button>{result && !result.correct && <Button type="button" className="button-quiet" onClick={retry}><RotateCcw size={17} /> REINTENTAR</Button>}<Link className="button button-quiet" to={activity.theoryPath}><BookOpen size={18} /> VOLVER A LA TEORÍA</Link></div>
-    {result?.correct && !result.needsTeacherReview && activity.nextId && <Link className="next-activity" to={activityPath(activity.nextId)}>SIGUIENTE ACTIVIDAD <ArrowRight size={18} /></Link>}
+    {result?.correct && activity.nextId && <Link className="next-activity" to={activityPath(activity.nextId)}>SIGUIENTE ACTIVIDAD <ArrowRight size={18} /></Link>}
     {storageError && <p className="storage-warning" role="status">El navegador no permite guardar datos locales. El borrador podría perderse al actualizar.</p>}
   </div>;
 }

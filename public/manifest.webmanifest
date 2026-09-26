@@ -1,0 +1,15 @@
+{
+  "name": "Edu App Contable",
+  "short_name": "Edu Contable",
+  "description": "Aprendé, practicá y reforzá contenidos contables con el material de clase.",
+  "lang": "es-AR",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "theme_color": "#2b5146",
+  "background_color": "#fafaf7",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

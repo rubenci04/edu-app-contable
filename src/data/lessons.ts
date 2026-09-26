@@ -69,7 +69,7 @@ export const lessons: Lesson[] = [
     concept: 'La factura B es emitida por un responsable inscripto cuando vende a consumidores finales, monotributistas o sujetos exentos.',
     example: { title: 'La compra de un electrodoméstico', paragraphs: ['Un consumidor final compra un electrodoméstico y recibe una factura B.'], source: theoryExample },
     remember: 'El IVA está incluido en el precio total y no se presenta discriminado para el comprador.',
-    related: ['factura', 'factura-a', 'factura-c'], practiceId: 'factura-b', practicePath: '/practicar', sourceSection: 'Factura B',
+    related: ['factura', 'factura-a', 'factura-c'], practiceId: 'factura-b', practicePath: '/practicar/factura-b', sourceSection: 'Factura B',
   },
   {
     id: 'factura-c', group: 'documentos-comerciales', title: 'Factura C', summary: 'Un comprobante sin IVA discriminado.',
@@ -77,7 +77,7 @@ export const lessons: Lesson[] = [
     explanation: [{ title: 'El IVA en este comprobante', paragraphs: ['El emisor no liquida este impuesto como responsable inscripto.'] }],
     example: { title: 'Un servicio de reparación', paragraphs: ['Un monotributista presta un servicio de reparación y entrega una factura C.'], source: theoryExample },
     remember: 'En la factura C no se discrimina el IVA.',
-    related: ['factura', 'factura-a', 'factura-b'], practiceId: 'factura-c', practicePath: '/practicar', sourceSection: 'Factura C',
+    related: ['factura', 'factura-a', 'factura-b'], practiceId: 'factura-c', practicePath: '/practicar/factura-c', sourceSection: 'Factura C',
   },
   {
     id: 'nota-de-debito', group: 'documentos-comerciales', title: 'Nota de débito', summary: 'Un aumento de la deuda del comprador.',
@@ -85,7 +85,7 @@ export const lessons: Lesson[] = [
     explanation: [{ title: 'Puede originarse por', items: ['Intereses por pago fuera de término.', 'Gastos de transporte o flete no incluidos en la factura.', 'Errores de facturación que produjeron un importe menor al correcto.', 'Otros conceptos que incrementen la deuda del comprador.'] }],
     example: { title: 'Intereses sobre una deuda', paragraphs: ['Si el comprador debía $50.000 y se cargan $2.000 de intereses, deberá $52.000.'], source: theoryExample },
     remember: 'Para el vendedor aumenta el derecho a cobrar y para el comprador aumenta la deuda.',
-    related: ['nota-de-credito', 'factura'], practiceId: 'nota-de-debito', practicePath: '/practicar', sourceSection: '4. Nota de débito',
+    related: ['nota-de-credito', 'factura'], practiceId: 'nota-de-debito', practicePath: '/practicar/nota-de-debito', sourceSection: '4. Nota de débito',
   },
   {
     id: 'nota-de-credito', group: 'documentos-comerciales', title: 'Nota de crédito', summary: 'Una disminución de la deuda del comprador.',
@@ -93,7 +93,7 @@ export const lessons: Lesson[] = [
     explanation: [{ title: 'Puede originarse por', items: ['Devolución de mercaderías.', 'Descuentos o bonificaciones.', 'Errores de facturación por importes cobrados de más.', 'Mercaderías dañadas o entregadas en menor cantidad.', 'Anulación total o parcial de una operación.'] }],
     example: { title: 'Una devolución de mercaderías', paragraphs: ['Si el comprador debía $50.000 y devuelve mercaderías por $5.000, deberá $45.000.'], source: theoryExample },
     remember: 'Para el vendedor disminuye el derecho a cobrar y para el comprador disminuye la deuda.',
-    related: ['nota-de-debito', 'factura'], practiceId: 'nota-de-credito', practicePath: '/practicar', sourceSection: '5. Nota de crédito',
+    related: ['nota-de-debito', 'factura'], practiceId: 'nota-de-credito', practicePath: '/practicar/nota-de-credito', sourceSection: '5. Nota de crédito',
   },
   {
     id: 'recibo', group: 'documentos-comerciales', title: 'Recibo', summary: 'La constancia de un pago.',
@@ -104,7 +104,7 @@ export const lessons: Lesson[] = [
     ],
     example: { title: 'Un pago parcial', paragraphs: ['Pisapapeles recibe de Los Libritos $151.680 en efectivo a cuenta de la Factura A N.º 00065445, según el Recibo N.º 0001212.'], source: 'DOCUMENTOS COMERCIALES PDF.pdf · Actividad 8 · página 8' },
     remember: 'Sirve como comprobante de pago y demuestra que una deuda fue cancelada total o parcialmente.',
-    related: ['factura', 'cheque'], practiceId: 'recibo', practicePath: '/practicar', sourceSection: '6. Recibo',
+    related: ['factura', 'cheque'], practiceId: 'recibo', practicePath: '/practicar/recibo', sourceSection: '6. Recibo',
   },
   {
     id: 'cheque', group: 'documentos-comerciales', title: 'Cheque', summary: 'Una orden de pago.',
@@ -115,7 +115,7 @@ export const lessons: Lesson[] = [
     ],
     example: { title: 'El cheque del material práctico', items: ['Importe: $14.530.', 'Firmante o pagador: Garbarino SRL.', 'Beneficiario o cobrador: Carmen Rotondo.'], source: 'DOCUMENTOS COMERCIALES PDF.pdf · Actividad 10 · página 9' },
     remember: 'El cheque es una orden de pago; el pagaré es una promesa de pago.',
-    related: ['pagare', 'recibo'], practiceId: 'cheque', practicePath: '/practicar', sourceSection: '7. Cheque y Síntesis para recordar',
+    related: ['pagare', 'recibo'], practiceId: 'cheque', practicePath: '/practicar/cheque', sourceSection: '7. Cheque y Síntesis para recordar',
   },
   {
     id: 'pagare', group: 'documentos-comerciales', title: 'Pagaré', summary: 'Una promesa de pago.',
@@ -126,7 +126,7 @@ export const lessons: Lesson[] = [
     ],
     example: { title: 'El pagaré N.º 053', paragraphs: ['Marcelo Gómez es el firmante o librador y Raúl Rosso es el beneficiario. El importe es de $12.000 y el vencimiento es a 60 días.', 'Se emite en Ordóñez el 20 de abril de 2026 por una venta de mercaderías. El lugar de pago es Calle 25 N.º 987, Ordóñez.'], source: 'DOCUMENTOS COMERCIALES PDF.pdf · Actividad 9 · página 9' },
     remember: 'El firmante se compromete a pagar y el beneficiario tiene derecho a cobrar.',
-    related: ['cheque', 'activo', 'pasivo'], practiceId: 'pagare', practicePath: '/practicar', sourceSection: '8. Pagaré',
+    related: ['cheque', 'activo', 'pasivo'], practiceId: 'pagare', practicePath: '/practicar/pagare', sourceSection: '8. Pagaré',
   },
   {
     id: 'patrimonio', group: 'patrimonio', title: 'Patrimonio', summary: 'Bienes, derechos y obligaciones.',
