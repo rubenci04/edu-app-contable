@@ -7,7 +7,7 @@ import type { QuizQuestion } from '../data/quizQuestions';
 import { useLocalProgress } from '../hooks/useLocalProgress';
 
 export function PlayPage() {
-  const { progress, storageError, saveQuizScore } = useLocalProgress();
+  const { progress, storageError, saveQuizScore, saveQuizQuestions } = useLocalProgress();
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [stage, setStage] = useState<'intro' | 'playing' | 'finished'>('intro');
   const [index, setIndex] = useState(0);
@@ -15,7 +15,9 @@ export function PlayPage() {
   const [points, setPoints] = useState(0);
 
   function start() {
-    setQuestions(newQuiz());
+    const next = newQuiz(progress.recentQuizIds);
+    saveQuizQuestions(next.map(question => question.id));
+    setQuestions(next);
     setIndex(0);
     setSelected(null);
     setPoints(0);

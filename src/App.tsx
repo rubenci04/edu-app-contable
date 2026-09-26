@@ -12,6 +12,8 @@ import { patrimonyActivities, getPatrimonyActivity, patrimonyPath } from './data
 import { PatrimonyPage } from './pages/PatrimonyPage';
 import { PlayPage } from './pages/PlayPage';
 import { activities } from './data/activities';
+import { StudentProfileForm, WelcomeScreen } from './components/StudentProfileForm';
+import { useLocalStudent, type StudentProfile } from './hooks/useLocalStudent';
 
 function HomePage() {
   const cardsRef = useRef<HTMLElement>(null);
@@ -44,9 +46,10 @@ function HomePage() {
   </>;
 }
 
-function ProgressPage() {
+function ProgressPage({ profile, saveProfile, profileStorageError }: { profile: StudentProfile; saveProfile: (profile: StudentProfile) => void; profileStorageError: boolean }) {
   const { progress, storageError, resetProgress } = useLocalProgress();
   const [confirmReset, setConfirmReset] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
   const completedDocuments = activities.filter(activity => progress.activities[activity.id]?.completed);
   const completedPatrimony = patrimonyActivities.filter(activity => progress.activities[activity.id]?.completed);
   const completed = completedDocuments.length + completedPatrimony.length;
@@ -54,11 +57,15 @@ function ProgressPage() {
   const percent = Math.round(completed / total * 100);
   const started = [...activities, ...patrimonyActivities].some(activity => progress.activities[activity.id]?.started);
   return <><PageHeader eyebrow="MI PROGRESO" title="Cada avance, en un lugar." description="Acá podrás consultar tu recorrido y las actividades que completes." />
+    <Card className="student-profile-card"><div className="student-profile-heading"><div><span className="eyebrow">PERFIL LOCAL</span><h2>Tus datos</h2></div>{!editingProfile && <Button type="button" className="button-quiet" onClick={() => setEditingProfile(true)}>EDITAR DATOS</Button>}</div>
+      {editingProfile ? <StudentProfileForm profile={profile} onSave={next => { saveProfile(next); setEditingProfile(false); }} onCancel={() => setEditingProfile(false)} /> : <dl className="student-profile-details"><div><dt>Nombre</dt><dd>{profile.name}</dd></div><div><dt>Edad</dt><dd>{profile.age} años</dd></div><div><dt>Curso</dt><dd>{profile.course}</dd></div></dl>}
+      {profileStorageError && <p className="storage-warning" role="status">El navegador no permite guardar el perfil localmente.</p>}
+    </Card>
     <div className="stats-grid"><Card className="stat-card"><FileText size={23} /><span>Documentos completados</span><strong>{completedDocuments.length}/{activities.length}</strong><p>{completedDocuments.length ? completedDocuments.map(item => item.title).join(' · ') : 'Todavía no completaste documentos.'}</p></Card><Card className="stat-card"><BookOpen size={23} /><span>Patrimonio completado</span><strong>{completedPatrimony.length}/{patrimonyActivities.length}</strong><p>{completedPatrimony.length ? completedPatrimony.map(item => item.title).join(' · ') : 'Todavía no completaste ejercicios de patrimonio.'}</p></Card><Card className="stat-card"><Trophy size={23} /><span>Mejor puntaje del juego</span><strong>{progress.quiz.bestScore === null ? '—' : `${progress.quiz.bestScore}/10`}</strong><p>Último puntaje: {progress.quiz.lastScore === null ? '—' : `${progress.quiz.lastScore}/10`}. No es una evaluación oficial.</p></Card></div>
     <Card className="progress-card"><div className="section-heading compact"><h2>Tu recorrido</h2><span className="status-pill">{started ? 'En curso' : 'Por empezar'}</span></div><div className="progress-label"><span>Progreso general · {completed} de {total} actividades</span><strong>{percent} %</strong></div><ProgressBar value={percent} label="Progreso general de actividades" /><p>El porcentaje incluye las {activities.length} prácticas de documentos y los {patrimonyActivities.length} ejercicios de patrimonio. Las actividades con datos pendientes de indicación docente permanecen en revisión y no se marcan como completadas.</p></Card>
     <Card className="progress-list"><h2>Ejercicios de patrimonio</h2><div>{patrimonyActivities.map(activity => <Link to={patrimonyPath(activity.id)} key={activity.id}><span>{activity.title}</span><strong>{progress.activities[activity.id]?.completed ? 'Completada' : progress.activities[activity.id]?.started ? 'En curso' : 'Por empezar'}</strong></Link>)}</div></Card>
     <div className="pending-notice"><Sprout size={22} /><div><strong>Tus datos quedan en este dispositivo</strong><p>{storageError ? 'El navegador no permite guardar datos locales. El progreso no podrá conservarse.' : 'Los borradores, avances y puntajes se guardan solo en este navegador.'}</p></div></div>
-    <div className="reset-area">{confirmReset ? <Card className="reset-confirm" role="group" aria-label="Confirmar reinicio de progreso"><h2>¿Reiniciar todo el progreso?</h2><p>Se borrarán borradores, actividades completadas, intentos y puntajes guardados en este navegador.</p><div><Button type="button" className="button-quiet" onClick={() => setConfirmReset(false)}>CANCELAR</Button><Button type="button" className="button-danger" onClick={() => { resetProgress(); setConfirmReset(false); }}>SÍ, REINICIAR PROGRESO</Button></div></Card> : <Button type="button" className="button-quiet" onClick={() => setConfirmReset(true)}><RotateCcw size={18} /> Reiniciar progreso</Button>}</div>
+    <div className="reset-area">{confirmReset ? <Card className="reset-confirm" role="group" aria-label="Confirmar reinicio de progreso"><h2>¿Reiniciar todo el progreso?</h2><p>Se borrarán borradores, actividades completadas, intentos y puntajes guardados en este navegador. Tu nombre, edad y curso se conservarán.</p><div><Button type="button" className="button-quiet" onClick={() => setConfirmReset(false)}>CANCELAR</Button><Button type="button" className="button-danger" onClick={() => { resetProgress(); setConfirmReset(false); }}>SÍ, REINICIAR PROGRESO</Button></div></Card> : <Button type="button" className="button-quiet" onClick={() => setConfirmReset(true)}><RotateCcw size={18} /> Reiniciar progreso</Button>}</div>
   </>;
 }
 
@@ -72,6 +79,7 @@ function AboutPage() {
 
 export function App() {
   const location = useLocation();
+  const { profile, saveProfile, storageError: profileStorageError } = useLocalStudent();
   const mainRef = useRef<HTMLElement>(null);
   const initialPath = useRef(location.pathname);
   const isLessonRoute = /^\/aprender\/[^/]+\/?$/.test(location.pathname);
@@ -87,9 +95,10 @@ export function App() {
     if (initialPath.current !== location.pathname) mainRef.current?.focus({ preventScroll: true });
     initialPath.current = location.pathname;
   }, [location.pathname, currentLesson, currentActivity, currentPatrimony]);
+  if (!profile) return <WelcomeScreen onSave={saveProfile} storageError={profileStorageError} />;
   return <div className="app-shell">
     <a href="#main" className="skip-link">Saltar al contenido</a>
-    <header className="site-header"><div className="header-inner"><Link className="brand" to="/" aria-label="Edu App Contable, inicio"><span className="brand-mark"><GraduationCap size={24} /></span><span>Edu App <strong>Contable</strong><small>APRENDER PARA AVANZAR</small></span></Link><nav aria-label="Navegación principal" className="desktop-nav"><NavLink to="/" end><Home size={17} /> Inicio</NavLink>{sections.map(({ path, nav, icon: Icon }) => <NavLink key={path} to={path}><Icon size={17} />{nav}</NavLink>)}</nav><span className="header-badge"><span /> Tu aula, a mano</span></div></header>
+    <header className="site-header"><div className="header-inner"><Link className="brand" to="/" aria-label="Edu App Contable, inicio"><span className="brand-mark"><GraduationCap size={24} /></span><span>Edu App <strong>Contable</strong><small>APRENDER PARA AVANZAR</small></span></Link><nav aria-label="Navegación principal" className="desktop-nav"><NavLink to="/" end><Home size={17} /> Inicio</NavLink>{sections.map(({ path, nav, icon: Icon }) => <NavLink key={path} to={path}><Icon size={17} />{nav}</NavLink>)}</nav><span className="header-badge"><span /> Hola, {profile.name}</span></div></header>
     <main id="main" ref={mainRef} tabIndex={-1} className="main-container">
       <div className="breadcrumb"><Link to="/">Inicio</Link>{isLessonRoute ? <><ChevronRight size={14} /><Link to="/aprender">Aprender</Link><ChevronRight size={14} /><span aria-current="page">{currentLesson?.title ?? 'Tema no encontrado'}</span></> : isActivityRoute || isPatrimonyRoute ? <><ChevronRight size={14} /><Link to="/practicar">Practicar</Link><ChevronRight size={14} /><span aria-current="page">{currentActivity?.title ?? currentPatrimony?.title ?? 'Actividad no encontrada'}</span></> : location.pathname !== '/' ? <><ChevronRight size={14} /><span>{location.pathname === '/acerca-de' ? 'Acerca de' : sections.find(item => item.path === location.pathname)?.nav ?? 'Página no encontrada'}</span></> : <><ChevronRight size={14} /><span>Tu espacio</span></>}</div>
       {location.pathname !== '/' && <Link to={isLessonRoute ? '/aprender' : isActivityRoute || isPatrimonyRoute ? '/practicar' : '/'} className="back-link"><ArrowLeft size={16} />{isLessonRoute ? 'Volver a los temas' : isActivityRoute || isPatrimonyRoute ? 'Volver a Practicamos' : 'Volver al inicio'}</Link>}
@@ -101,12 +110,12 @@ export function App() {
         <Route path="/practicar/:activityId" element={<ActivityPage />} />
         <Route path="/practicar/patrimonio/:exerciseId" element={<PatrimonyPage />} />
         <Route path="/jugar" element={<PlayPage />} />
-        <Route path="/progreso" element={<ProgressPage />} />
+        <Route path="/progreso" element={<ProgressPage profile={profile} saveProfile={saveProfile} profileStorageError={profileStorageError} />} />
         <Route path="/acerca-de" element={<AboutPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </main>
-    <footer className="site-footer"><span><GraduationCap size={17} /> Edu App Contable</span><p>Un espacio para aprender, a tu ritmo.</p><Link to="/acerca-de">Acerca de</Link><span className="footer-version">Prototipo local · v0.1</span></footer>
+    <footer className="site-footer"><span><GraduationCap size={17} /> Edu App Contable</span><p>Un espacio para aprender, a tu ritmo.</p><Link to="/acerca-de">Acerca de</Link><span className="footer-version">Prototipo local · v0.1</span><small className="footer-credit">© {new Date().getFullYear()} · Programador: Rubén E. Albarracín · Todos los derechos reservados.</small></footer>
     <nav aria-label="Navegación móvil" className="mobile-nav"><NavLink to="/" end><Home size={21} /><span>Inicio</span></NavLink>{sections.map(({ path, nav, icon: Icon }) => <NavLink key={path} to={path}><Icon size={21} /><span>{nav}</span></NavLink>)}</nav>
   </div>;
 }

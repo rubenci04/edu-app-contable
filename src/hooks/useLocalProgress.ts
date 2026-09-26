@@ -12,8 +12,8 @@ export interface ActivityProgress {
   readyForReview: boolean;
 }
 
-interface Progress { version: 2; activities: Record<string, ActivityProgress>; quiz: { lastScore: number | null; bestScore: number | null } }
-const empty = (): Progress => ({ version: 2, activities: {}, quiz: { lastScore: null, bestScore: null } });
+interface Progress { version: 2; activities: Record<string, ActivityProgress>; quiz: { lastScore: number | null; bestScore: number | null }; recentQuizIds: string[] }
+const empty = (): Progress => ({ version: 2, activities: {}, quiz: { lastScore: null, bestScore: null }, recentQuizIds: [] });
 const emptyActivity = (): ActivityProgress => ({ started: true, answers: {}, attempts: 0, completed: false, readyForReview: false });
 
 function readProgress(): { progress: Progress; error: boolean } {
@@ -34,7 +34,10 @@ function readProgress(): { progress: Progress; error: boolean } {
         }
         const quiz = 'quiz' in parsed && parsed.quiz && typeof parsed.quiz === 'object' ? parsed.quiz as { lastScore?: unknown; bestScore?: unknown } : {};
         const score = (value: unknown) => Number.isInteger(value) && Number(value) >= 0 && Number(value) <= 10 ? Number(value) : null;
-        return { progress: { version: 2, activities, quiz: { lastScore: score(quiz.lastScore), bestScore: score(quiz.bestScore) } }, error: false };
+        const recentQuizIds = 'recentQuizIds' in parsed && Array.isArray(parsed.recentQuizIds)
+          ? parsed.recentQuizIds.filter((id): id is string => typeof id === 'string').slice(0, 20)
+          : [];
+        return { progress: { version: 2, activities, quiz: { lastScore: score(quiz.lastScore), bestScore: score(quiz.bestScore) }, recentQuizIds }, error: false };
       }
     }
     const legacy = localStorage.getItem(LEGACY_KEY);
@@ -80,6 +83,15 @@ export function useLocalProgress() {
     catch { setStorageError(true); }
   }, []);
 
+  const saveQuizQuestions = useCallback((ids: string[]) => {
+    const recentQuizIds = [...new Set([...ids, ...current.current.recentQuizIds])].slice(0, 20);
+    const next = { ...current.current, recentQuizIds };
+    current.current = next;
+    setProgress(next);
+    try { localStorage.setItem(KEY, JSON.stringify(next)); setStorageError(false); }
+    catch { setStorageError(true); }
+  }, []);
+
   const resetProgress = useCallback(() => {
     const next = empty();
     current.current = next;
@@ -88,5 +100,5 @@ export function useLocalProgress() {
     catch { setStorageError(true); }
   }, []);
 
-  return { progress, storageError, startActivity, saveAnswers, recordResult, saveQuizScore, resetProgress };
+  return { progress, storageError, startActivity, saveAnswers, recordResult, saveQuizScore, saveQuizQuestions, resetProgress };
 }
