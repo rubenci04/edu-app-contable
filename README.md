@@ -23,13 +23,16 @@ La instalación descarga dependencias de desarrollo. La aplicación en funcionam
 ## Alcance
 
 - Inicio con las cuatro tarjetas solicitadas.
-- Rutas `/`, `/aprender`, `/aprender/:lessonId`, `/practicar`, `/practicar/:activityId`, `/jugar` y `/progreso`, más una pantalla para direcciones desconocidas.
+- Rutas `/`, `/aprender`, `/aprender/:lessonId`, `/practicar`, `/practicar/:activityId`, `/practicar/patrimonio/:exerciseId`, `/jugar` y `/progreso`, más una pantalla para direcciones desconocidas.
 - Navegación inferior en teléfonos y superior en escritorio, foco al cambiar de pantalla, enlace para saltar al contenido y respeto por movimiento reducido.
 - Componentes reutilizables `Button`, `Card`, `PageHeader` y `ProgressBar`.
 - Módulo Aprendemos con 17 lecciones navegables en dos grupos: documentos comerciales y patrimonio. La teoría y los ejemplos proceden de los documentos de `docs`.
 - Comparación de facturas A, B y C en la lección general de Factura; cada tipo también tiene su propia lección.
-- Las primeras tres prácticas del PDF (Orden de compra, Remito y Factura A) usan un formulario reutilizable con validación y pistas por campo. Las demás actividades y el juego permanecen pendientes.
-- Borradores, intentos y actividades completadas se guardan en `localStorage`, clave `edu-app-contable:progress:v2`. Se conserva el progreso previo de la clave `v1` cuando existe. El bloqueo del almacenamiento no impide navegar.
+- Las primeras tres prácticas del PDF (Orden de compra, Remito y Factura A) usan un formulario reutilizable con validación y pistas por campo. Las demás prácticas de documentos siguen pendientes.
+- Cuatro ejercicios de patrimonio del documento teórico: tres valores faltantes de la ecuación y la clasificación, totales y Patrimonio Neto del caso de Sofía Medina.
+- Juego de diez preguntas aleatorias por partida, con selección múltiple, verdadero/falso, clasificación y cálculos respaldados por el material; feedback inmediato y pantalla final. No es una evaluación oficial.
+- Mi Progreso muestra documentos y ejercicios completados, porcentaje general y puntajes del juego. El reinicio solicita confirmación.
+- Borradores, intentos, actividades completadas y puntajes se guardan en `localStorage`, clave `edu-app-contable:progress:v2`. Se conserva el progreso previo de la clave `v1` cuando existe. El bloqueo del almacenamiento no impide navegar.
 
 No incluye backend, autenticación, panel docente, servicios pagos ni evaluaciones oficiales. El progreso corresponde solo a este navegador.
 
@@ -37,6 +40,6 @@ No incluye backend, autenticación, panel docente, servicios pagos ni evaluacion
 
 ## Organización
 
-`src/components/ui.tsx`: componentes compartidos. `src/data/sections.ts`: módulos y navegación. `src/data/lessonTypes.ts` y `src/data/lessons.ts`: contenido pedagógico. `src/data/activityTypes.ts` y `src/data/activities.ts`: consignas, campos y respuestas de prácticas. `src/lib/activityValidation.ts`: validación reutilizable. `src/pages/LearnPages.tsx` y `src/pages/PracticePages.tsx`: pantallas. `src/hooks/useLocalProgress.ts`: persistencia local. `src/App.tsx`: layout y rutas. `src/styles.css`: Tailwind y estilos responsive.
+`src/components/ui.tsx`: componentes compartidos. `src/data/sections.ts`: módulos y navegación. `src/data/lessonTypes.ts` y `src/data/lessons.ts`: contenido pedagógico. `src/data/activityTypes.ts`, `src/data/activities.ts` y `src/data/patrimonyActivities.ts`: consignas, campos y respuestas de prácticas. `src/data/quizQuestions.ts`: banco de preguntas y selección de partida. `src/lib/activityValidation.ts`: validación reutilizable. `src/pages/LearnPages.tsx`, `src/pages/PracticePages.tsx`, `src/pages/PatrimonyPage.tsx` y `src/pages/PlayPage.tsx`: pantallas. `src/hooks/useLocalProgress.ts`: persistencia local. `src/App.tsx`: layout, progreso y rutas. `src/styles.css`: Tailwind y estilos responsive.
 
 Los documentos originales están en `docs`. El análisis previo está en `docs/REVISION.md`. `scripts/inspect_documents.py` permite extraer su texto usando el runtime de Python con pypdf, solo para revisión de desarrollo; no es parte de la aplicación.

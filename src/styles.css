@@ -221,6 +221,45 @@ h1,h2,h3,p { margin: 0; }
 .button-quiet { color: #315c43; background: #fff; border-color: #d4e0d0; }
 .button-quiet:hover { color: #21462e; background: #f2f6ef; }
 .next-activity { display: inline-flex; align-items: center; gap: 10px; color: #315c43; min-height: 48px; font-size: 13px; font-weight: 700; margin-bottom: 25px; }
+.patrimony-given { margin: 14px 0 0; padding-left: 20px; color: #425b4a; font-size: 14px; line-height: 1.9; }
+.patrimony-form { padding: 22px; }
+.patrimony-form h2 { font-size: 18px; margin-bottom: 20px; }
+.patrimony-fields { display: grid; gap: 18px; }
+.formula-note { margin-top: 24px; border-radius: 9px; padding: 13px; background: #edf3e8; color: #385a41; font-size: 12px; font-weight: 700; text-align: center; }
+.quiz-intro,.quiz-final { padding: 28px 22px; display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
+.quiz-hero-icon { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 17px; color: #715f92; background: #f0ecf8; }
+.quiz-intro h2,.quiz-final h2 { font-size: 25px; line-height: 1.3; }
+.quiz-intro p,.quiz-final p { color: #647568; line-height: 1.8; font-size: 14px; }
+.quiz-scores { display: flex; flex-wrap: wrap; gap: 10px 24px; font-size: 13px; color: #576d5d; }
+.quiz-scores strong { color: #243f38; }
+.quiz-meta { display: flex; justify-content: space-between; gap: 15px; font-size: 13px; margin-bottom: 12px; }
+.quiz-page > .progress-track { margin-bottom: 20px; }
+.quiz-card { padding: 24px 20px; }
+.quiz-card h2 { font-size: clamp(20px, 4vw, 27px); line-height: 1.4; margin: 14px 0 24px; }
+.quiz-options { display: grid; gap: 11px; }
+.quiz-option { width: 100%; min-height: 52px; border: 1px solid #ccd9cb; background: #fff; border-radius: 10px; color: #274438; padding: 13px 16px; text-align: left; font-weight: 600; transition: border-color .2s, background .2s; }
+.quiz-option:not(:disabled):hover { border-color: #5b8867; background: #f1f6ef; }
+.quiz-option.is-answer { background: #e7f2e4; border-color: #5e995d; opacity: 1; }
+.quiz-option.is-wrong { background: #fff0ed; border-color: #bc635b; opacity: 1; }
+.quiz-feedback { margin-top: 24px; padding: 17px; border-radius: 11px; font-size: 13px; line-height: 1.7; }
+.quiz-feedback.is-correct { background: #edf5e9; color: #365f3e; }
+.quiz-feedback.has-errors { background: #fff0ed; color: #883e35; }
+.quiz-feedback p { margin-top: 6px; }
+.quiz-feedback small { display: block; margin-top: 9px; opacity: .8; }
+.quiz-advance { margin-top: 20px; width: 100%; }
+.quiz-final > svg { color: #775f9b; }
+.quiz-end-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.progress-list { padding: 22px; margin-bottom: 22px; }
+.progress-list h2 { font-size: 18px; margin-bottom: 12px; }
+.progress-list a { display: flex; justify-content: space-between; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px solid #e5ebe3; font-size: 13px; }
+.progress-list a strong { font-size: 11px; color: #4b7151; white-space: nowrap; }
+.reset-area { margin-top: 18px; }
+.reset-confirm { padding: 22px; border-color: #dfc3bc; background: #fff8f5; }
+.reset-confirm h2 { font-size: 18px; }
+.reset-confirm p { margin: 10px 0 18px; font-size: 13px; line-height: 1.7; }
+.reset-confirm > div { display: flex; flex-wrap: wrap; gap: 10px; }
+.button-danger { background: #9b453a; border-color: #9b453a; }
+.button-danger:hover { background: #7c322a; }
 @media (min-width: 580px) {
   .header-badge { display: flex; }
   .choice-grid, .topic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -236,6 +275,9 @@ h1,h2,h3,p { margin: 0; }
   .document-main-fields,.document-field-grid,.document-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .item-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .activity-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .patrimony-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .quiz-intro,.quiz-final { padding: 36px; }
+  .quiz-card { padding: 32px; }
 }
 @media (min-width: 720px) {
   .invoice-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }

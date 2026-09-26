@@ -138,21 +138,21 @@ export const lessons: Lesson[] = [
       { title: 'Obligaciones', paragraphs: ['Deudas que mantiene con terceros.'], items: ['Proveedores y préstamos bancarios.'] },
     ],
     remember: 'Activo: lo que la empresa posee y tiene derecho a cobrar. Pasivo: lo que debe. Patrimonio Neto: la parte que pertenece a los propietarios.',
-    related: ['activo', 'pasivo', 'patrimonio-neto', 'ecuacion-patrimonial-estatica'], practiceId: 'patrimonio', practicePath: '/practicar', sourceSection: 'Patrimonio y Síntesis para recordar',
+    related: ['activo', 'pasivo', 'patrimonio-neto', 'ecuacion-patrimonial-estatica'], practiceId: 'patrimonio', practicePath: '/practicar/patrimonio/sofia-medina', sourceSection: 'Patrimonio y Síntesis para recordar',
   },
   {
     id: 'activo', group: 'patrimonio', title: 'Activo', summary: 'Lo que posee y tiene derecho a cobrar.',
     concept: 'El activo representa todos los bienes y derechos que posee una empresa.',
     example: { title: 'Ejemplos de bienes y derechos', items: ['Bienes: dinero en efectivo o depositado en bancos, mercaderías, muebles, maquinarias, vehículos, inmuebles y equipos de computación.', 'Derechos: importes adeudados por clientes, documentos a cobrar y otros valores pendientes de cobro.'], source: theoryExample },
     remember: 'Activo es todo lo que la empresa posee y todo lo que tiene derecho a cobrar.',
-    related: ['patrimonio', 'pasivo', 'ecuacion-patrimonial-estatica'], practiceId: 'patrimonio', practicePath: '/practicar', sourceSection: 'Activo',
+    related: ['patrimonio', 'pasivo', 'ecuacion-patrimonial-estatica'], practiceId: 'patrimonio', practicePath: '/practicar/patrimonio/activo', sourceSection: 'Activo',
   },
   {
     id: 'pasivo', group: 'patrimonio', title: 'Pasivo', summary: 'Las deudas y obligaciones con terceros.',
     concept: 'El pasivo representa todas las deudas y obligaciones que la empresa tiene con terceros.',
     example: { title: 'Ejemplos de deudas y obligaciones', items: ['Deudas con proveedores.', 'Préstamos bancarios.', 'Sueldos, impuestos y servicios pendientes de pago.', 'Documentos a pagar.'], source: theoryExample },
     remember: 'Pasivo es todo lo que la empresa debe.',
-    related: ['patrimonio', 'activo', 'ecuacion-patrimonial-estatica'], practiceId: 'patrimonio', practicePath: '/practicar', sourceSection: 'Pasivo',
+    related: ['patrimonio', 'activo', 'ecuacion-patrimonial-estatica'], practiceId: 'patrimonio', practicePath: '/practicar/patrimonio/pasivo', sourceSection: 'Pasivo',
   },
   {
     id: 'patrimonio-neto', group: 'patrimonio', title: 'Patrimonio Neto', summary: 'La parte que pertenece a los propietarios.',
@@ -160,7 +160,7 @@ export const lessons: Lesson[] = [
     explanation: [{ title: 'Cómo está formado', paragraphs: ['Está formado principalmente por sus aportes, las ganancias, las pérdidas y las reservas acumuladas.'] }],
     example: { title: 'Del Activo al Patrimonio Neto', paragraphs: ['Si una empresa posee un activo de $800.000 y un pasivo de $300.000, su patrimonio neto es de $500.000.'], source: theoryExample },
     remember: 'PATRIMONIO NETO = ACTIVO − PASIVO',
-    related: ['activo', 'pasivo', 'ecuacion-patrimonial-estatica'], practiceId: 'patrimonio', practicePath: '/practicar', sourceSection: 'Patrimonio neto',
+    related: ['activo', 'pasivo', 'ecuacion-patrimonial-estatica'], practiceId: 'patrimonio', practicePath: '/practicar/patrimonio/patrimonio-neto', sourceSection: 'Patrimonio neto',
   },
   {
     id: 'ecuacion-patrimonial-estatica', group: 'patrimonio', title: 'Ecuación patrimonial estática', summary: 'La relación entre Activo, Pasivo y Patrimonio Neto.',
@@ -169,7 +169,7 @@ export const lessons: Lesson[] = [
     formulas: ['PASIVO = ACTIVO − PATRIMONIO NETO', 'PATRIMONIO NETO = ACTIVO − PASIVO'],
     example: { title: 'Cálculo y comprobación', paragraphs: ['Una empresa posee un activo de $950.000 y un pasivo de $350.000.'], items: ['Patrimonio Neto = $950.000 − $350.000 = $600.000.', 'Comprobación: $950.000 = $350.000 + $600.000.'], source: theoryExample },
     remember: 'ACTIVO = PASIVO + PATRIMONIO NETO',
-    related: ['activo', 'pasivo', 'patrimonio-neto'], practiceId: 'patrimonio', practicePath: '/practicar', sourceSection: 'Ecuación patrimonial estática, Fórmulas derivadas y Ejemplo de aplicación',
+    related: ['activo', 'pasivo', 'patrimonio-neto'], practiceId: 'patrimonio', practicePath: '/practicar/patrimonio/patrimonio-neto', sourceSection: 'Ecuación patrimonial estática, Fórmulas derivadas y Ejemplo de aplicación',
   },
 ];
 

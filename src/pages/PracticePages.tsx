@@ -7,8 +7,9 @@ import { activities, allActivityFields, getActivity } from '../data/activities';
 import type { Activity, ActivityField, Answers, ValidationResult } from '../data/activityTypes';
 import { useLocalProgress } from '../hooks/useLocalProgress';
 import { validateActivity } from '../lib/activityValidation';
+import { patrimonyActivities, patrimonyPath } from '../data/patrimonyActivities';
 
-const upcoming = ['Factura B', 'Factura C', 'Nota de débito', 'Nota de crédito', 'Recibo', 'Pagaré', 'Cheque', 'Patrimonio'];
+const upcoming = ['Factura B', 'Factura C', 'Nota de débito', 'Nota de crédito', 'Recibo', 'Pagaré', 'Cheque'];
 export const activityPath = (id: string) => `/practicar/${id}`;
 
 export function PracticePage() {
@@ -21,14 +22,19 @@ export function PracticePage() {
       const status = record?.completed ? 'Completada' : record?.readyForReview ? 'Revisión docente' : record?.started ? 'En curso' : 'Por empezar';
       return <Link to={activityPath(activity.id)} key={activity.id} className="practice-link"><Card className="practice-tile"><span className="practice-icon"><ClipboardList size={25} /></span><span className="practice-step">ACTIVIDAD 0{index + 1}</span><h3>{activity.title}</h3><p>Completá el documento de la situación de Pisapapeles.</p><span className="practice-status">{status}</span><span className="practice-open">Abrir actividad <ArrowRight size={17} /></span></Card></Link>;
     })}</div>
+    <div className="section-heading compact"><h2>Patrimonio</h2><span className="muted">4 ejercicios</span></div>
+    <div className="practice-grid">{patrimonyActivities.map((activity, index) => {
+      const record = progress.activities[activity.id];
+      return <Link to={patrimonyPath(activity.id)} key={activity.id} className="practice-link"><Card className="practice-tile"><span className="practice-icon"><ClipboardList size={25} /></span><span className="practice-step">PATRIMONIO 0{index + 1}</span><h3>{activity.title}</h3><p>{activity.instruction}</p><span className="practice-status">{record?.completed ? 'Completada' : record?.started ? 'En curso' : 'Por empezar'}</span><span className="practice-open">Abrir ejercicio <ArrowRight size={17} /></span></Card></Link>;
+    })}</div>
     <div className="section-heading compact"><h2>Próximamente</h2></div>
     <Card className="upcoming-list">{upcoming.map(title => <div key={title}><LockKeyhole size={16} aria-hidden="true" /><span>{title}</span><small>Próximamente</small></div>)}</Card>
-    <p className="source-note">Las tres actividades disponibles provienen de las páginas 1 a 3 de «DOCUMENTOS COMERCIALES PDF.pdf».</p>
+    <p className="source-note">Los documentos provienen de las páginas 1 a 3 de «DOCUMENTOS COMERCIALES PDF.pdf». Los ejercicios de patrimonio provienen de «Teoria_documentos_comerciales_y_patrimonio.docx».</p>
     {storageError && <p className="storage-warning" role="status">Tu navegador no permite guardar el progreso local. Podés usar las actividades, pero el borrador podría perderse al actualizar.</p>}
   </>;
 }
 
-function FieldControl({ field, value, onChange, result }: { field: ActivityField; value: string; onChange: (value: string) => void; result: ValidationResult | null }) {
+export function FieldControl({ field, value, onChange, result }: { field: ActivityField; value: string; onChange: (value: string) => void; result: ValidationResult | null }) {
   const issue = result?.feedback.find(item => item.fieldId === field.id);
   const inputId = `activity-${field.id.replace(/[^a-z0-9]/gi, '-')}`;
   const baseProps = { id: inputId, name: field.id, value, onChange: (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => onChange(event.target.value), 'aria-invalid': issue?.status === 'error' || undefined, 'aria-describedby': issue ? `${inputId}-feedback` : undefined };

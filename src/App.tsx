@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom';
-import { ArrowDown, ArrowLeft, ArrowRight, BookOpen, Check, ChevronRight, Compass, FileText, GraduationCap, Home, Leaf, Sparkles, Sprout, Trophy } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowRight, BookOpen, Check, ChevronRight, Compass, FileText, GraduationCap, Home, Leaf, RotateCcw, Sparkles, Sprout, Trophy } from 'lucide-react';
 import { Button, Card, PageHeader, ProgressBar } from './components/ui';
 import { sections } from './data/sections';
 import { useLocalProgress } from './hooks/useLocalProgress';
@@ -8,6 +8,10 @@ import { getLesson } from './data/lessons';
 import { LearnPage, LessonPage } from './pages/LearnPages';
 import { getActivity } from './data/activities';
 import { ActivityPage, PracticePage } from './pages/PracticePages';
+import { patrimonyActivities, getPatrimonyActivity, patrimonyPath } from './data/patrimonyActivities';
+import { PatrimonyPage } from './pages/PatrimonyPage';
+import { PlayPage } from './pages/PlayPage';
+import { activities } from './data/activities';
 
 function HomePage() {
   const cardsRef = useRef<HTMLElement>(null);
@@ -40,20 +44,21 @@ function HomePage() {
   </>;
 }
 
-function PlayPage() {
-  return <><PageHeader eyebrow="JUGAMOS" title="Tu próximo desafío." description="Un espacio para poner a prueba tus conocimientos sobre los temas de clase." />
-    <Card className="empty-state"><span className="empty-icon play"><Trophy size={40} strokeWidth={1.5} /></span><span className="status-pill">Próximamente</span><h2>El juego se está preparando</h2><p>En una próxima etapa podrás responder preguntas sobre documentos comerciales y patrimonio. Todavía no hay partidas ni puntajes disponibles.</p><Link className="button" to="/aprender">Explorá los temas <ArrowRight size={18} /></Link></Card>
-  </>;
-}
-
 function ProgressPage() {
-  const { progress, storageError } = useLocalProgress();
-  const completed = ['orden-de-compra', 'remito', 'factura-a'].filter(id => progress.activities[id]?.completed).length;
-  const started = ['orden-de-compra', 'remito', 'factura-a'].filter(id => progress.activities[id]?.started).length;
+  const { progress, storageError, resetProgress } = useLocalProgress();
+  const [confirmReset, setConfirmReset] = useState(false);
+  const completedDocuments = activities.filter(activity => progress.activities[activity.id]?.completed);
+  const completedPatrimony = patrimonyActivities.filter(activity => progress.activities[activity.id]?.completed);
+  const completed = completedDocuments.length + completedPatrimony.length;
+  const total = activities.length + patrimonyActivities.length;
+  const percent = Math.round(completed / total * 100);
+  const started = [...activities, ...patrimonyActivities].some(activity => progress.activities[activity.id]?.started);
   return <><PageHeader eyebrow="MI PROGRESO" title="Cada avance, en un lugar." description="Acá podrás consultar tu recorrido y las actividades que completes." />
-    <div className="stats-grid"><Card className="stat-card"><BookOpen size={23} /><span>Temas completados</span><strong>—</strong><p>Los temas se pueden leer. El registro de lectura todavía no está habilitado.</p></Card><Card className="stat-card"><FileText size={23} /><span>Actividades completadas</span><strong>{completed}</strong><p>De las tres prácticas disponibles.</p></Card><Card className="stat-card"><Trophy size={23} /><span>Mejor puntaje</span><strong>—</strong><p>Todavía no hay partidas registradas.</p></Card></div>
-    <Card className="progress-card"><div className="section-heading compact"><h2>Tu recorrido</h2><span className="status-pill">{started ? 'En curso' : 'Por empezar'}</span></div><div className="progress-label"><span>Actividades completadas</span><strong>{Math.round(completed / 3 * 100)} %</strong></div><ProgressBar value={completed / 3 * 100} label="Progreso de actividades" /><p>Se registran Orden de Compra y Remito al comprobarlos. Factura A espera confirmación docente para IVA y total.</p></Card>
-    <div className="pending-notice"><Sprout size={22} /><div><strong>Este es tu punto de partida</strong><p>{storageError ? 'El navegador no permite guardar datos locales. El progreso no podrá conservarse en este dispositivo.' : 'Tus avances se guardarán en este navegador y dispositivo. Si borrás los datos del sitio, se perderán.'}</p></div></div>
+    <div className="stats-grid"><Card className="stat-card"><FileText size={23} /><span>Documentos completados</span><strong>{completedDocuments.length}/{activities.length}</strong><p>{completedDocuments.length ? completedDocuments.map(item => item.title).join(' · ') : 'Todavía no completaste documentos.'}</p></Card><Card className="stat-card"><BookOpen size={23} /><span>Patrimonio completado</span><strong>{completedPatrimony.length}/{patrimonyActivities.length}</strong><p>{completedPatrimony.length ? completedPatrimony.map(item => item.title).join(' · ') : 'Todavía no completaste ejercicios de patrimonio.'}</p></Card><Card className="stat-card"><Trophy size={23} /><span>Mejor puntaje del juego</span><strong>{progress.quiz.bestScore === null ? '—' : `${progress.quiz.bestScore}/10`}</strong><p>Último puntaje: {progress.quiz.lastScore === null ? '—' : `${progress.quiz.lastScore}/10`}. No es una evaluación oficial.</p></Card></div>
+    <Card className="progress-card"><div className="section-heading compact"><h2>Tu recorrido</h2><span className="status-pill">{started ? 'En curso' : 'Por empezar'}</span></div><div className="progress-label"><span>Progreso general · {completed} de {total} actividades</span><strong>{percent} %</strong></div><ProgressBar value={percent} label="Progreso general de actividades" /><p>El porcentaje incluye las tres prácticas de documentos y los cuatro ejercicios de patrimonio. Factura A queda pendiente de confirmación docente para IVA y total.</p></Card>
+    <Card className="progress-list"><h2>Ejercicios de patrimonio</h2><div>{patrimonyActivities.map(activity => <Link to={patrimonyPath(activity.id)} key={activity.id}><span>{activity.title}</span><strong>{progress.activities[activity.id]?.completed ? 'Completada' : progress.activities[activity.id]?.started ? 'En curso' : 'Por empezar'}</strong></Link>)}</div></Card>
+    <div className="pending-notice"><Sprout size={22} /><div><strong>Tus datos quedan en este dispositivo</strong><p>{storageError ? 'El navegador no permite guardar datos locales. El progreso no podrá conservarse.' : 'Los borradores, avances y puntajes se guardan solo en este navegador.'}</p></div></div>
+    <div className="reset-area">{confirmReset ? <Card className="reset-confirm" role="group" aria-label="Confirmar reinicio de progreso"><h2>¿Reiniciar todo el progreso?</h2><p>Se borrarán borradores, actividades completadas, intentos y puntajes guardados en este navegador.</p><div><Button type="button" className="button-quiet" onClick={() => setConfirmReset(false)}>CANCELAR</Button><Button type="button" className="button-danger" onClick={() => { resetProgress(); setConfirmReset(false); }}>SÍ, REINICIAR PROGRESO</Button></div></Card> : <Button type="button" className="button-quiet" onClick={() => setConfirmReset(true)}><RotateCcw size={18} /> Reiniciar progreso</Button>}</div>
   </>;
 }
 
@@ -69,25 +74,28 @@ export function App() {
   const currentLesson = isLessonRoute ? getLesson(location.pathname.split('/')[2]) : undefined;
   const isActivityRoute = /^\/practicar\/[^/]+\/?$/.test(location.pathname);
   const currentActivity = isActivityRoute ? getActivity(location.pathname.split('/')[2]) : undefined;
+  const isPatrimonyRoute = /^\/practicar\/patrimonio\/[^/]+\/?$/.test(location.pathname);
+  const currentPatrimony = isPatrimonyRoute ? getPatrimonyActivity(location.pathname.split('/')[3]) : undefined;
   useEffect(() => {
     const section = sections.find(item => item.path === location.pathname);
-    document.title = `${currentLesson?.title ?? currentActivity?.title ?? section?.nav ?? (location.pathname === '/' ? 'Inicio' : 'Página no encontrada')} · Edu App Contable`;
+    document.title = `${currentLesson?.title ?? currentActivity?.title ?? currentPatrimony?.title ?? section?.nav ?? (location.pathname === '/' ? 'Inicio' : 'Página no encontrada')} · Edu App Contable`;
     window.scrollTo({ top: 0, behavior: 'instant' });
     if (initialPath.current !== location.pathname) mainRef.current?.focus({ preventScroll: true });
     initialPath.current = location.pathname;
-  }, [location.pathname, currentLesson, currentActivity]);
+  }, [location.pathname, currentLesson, currentActivity, currentPatrimony]);
   return <div className="app-shell">
     <a href="#main" className="skip-link">Saltar al contenido</a>
     <header className="site-header"><div className="header-inner"><Link className="brand" to="/" aria-label="Edu App Contable, inicio"><span className="brand-mark"><GraduationCap size={24} /></span><span>Edu App <strong>Contable</strong><small>APRENDER PARA AVANZAR</small></span></Link><nav aria-label="Navegación principal" className="desktop-nav"><NavLink to="/" end><Home size={17} /> Inicio</NavLink>{sections.map(({ path, nav, icon: Icon }) => <NavLink key={path} to={path}><Icon size={17} />{nav}</NavLink>)}</nav><span className="header-badge"><span /> Tu aula, a mano</span></div></header>
     <main id="main" ref={mainRef} tabIndex={-1} className="main-container">
-      <div className="breadcrumb"><Link to="/">Inicio</Link>{isLessonRoute ? <><ChevronRight size={14} /><Link to="/aprender">Aprender</Link><ChevronRight size={14} /><span aria-current="page">{currentLesson?.title ?? 'Tema no encontrado'}</span></> : isActivityRoute ? <><ChevronRight size={14} /><Link to="/practicar">Practicar</Link><ChevronRight size={14} /><span aria-current="page">{currentActivity?.title ?? 'Actividad no encontrada'}</span></> : location.pathname !== '/' ? <><ChevronRight size={14} /><span>{sections.find(item => item.path === location.pathname)?.nav ?? 'Página no encontrada'}</span></> : <><ChevronRight size={14} /><span>Tu espacio</span></>}</div>
-      {location.pathname !== '/' && <Link to={isLessonRoute ? '/aprender' : isActivityRoute ? '/practicar' : '/'} className="back-link"><ArrowLeft size={16} />{isLessonRoute ? 'Volver a los temas' : isActivityRoute ? 'Volver a Practicamos' : 'Volver al inicio'}</Link>}
+      <div className="breadcrumb"><Link to="/">Inicio</Link>{isLessonRoute ? <><ChevronRight size={14} /><Link to="/aprender">Aprender</Link><ChevronRight size={14} /><span aria-current="page">{currentLesson?.title ?? 'Tema no encontrado'}</span></> : isActivityRoute || isPatrimonyRoute ? <><ChevronRight size={14} /><Link to="/practicar">Practicar</Link><ChevronRight size={14} /><span aria-current="page">{currentActivity?.title ?? currentPatrimony?.title ?? 'Actividad no encontrada'}</span></> : location.pathname !== '/' ? <><ChevronRight size={14} /><span>{sections.find(item => item.path === location.pathname)?.nav ?? 'Página no encontrada'}</span></> : <><ChevronRight size={14} /><span>Tu espacio</span></>}</div>
+      {location.pathname !== '/' && <Link to={isLessonRoute ? '/aprender' : isActivityRoute || isPatrimonyRoute ? '/practicar' : '/'} className="back-link"><ArrowLeft size={16} />{isLessonRoute ? 'Volver a los temas' : isActivityRoute || isPatrimonyRoute ? 'Volver a Practicamos' : 'Volver al inicio'}</Link>}
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/aprender" element={<LearnPage />} />
         <Route path="/aprender/:lessonId" element={<LessonPage />} />
         <Route path="/practicar" element={<PracticePage />} />
         <Route path="/practicar/:activityId" element={<ActivityPage />} />
+        <Route path="/practicar/patrimonio/:exerciseId" element={<PatrimonyPage />} />
         <Route path="/jugar" element={<PlayPage />} />
         <Route path="/progreso" element={<ProgressPage />} />
         <Route path="*" element={<NotFoundPage />} />

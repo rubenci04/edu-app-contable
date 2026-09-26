@@ -12,8 +12,8 @@ export interface ActivityProgress {
   readyForReview: boolean;
 }
 
-interface Progress { version: 2; activities: Record<string, ActivityProgress> }
-const empty = (): Progress => ({ version: 2, activities: {} });
+interface Progress { version: 2; activities: Record<string, ActivityProgress>; quiz: { lastScore: number | null; bestScore: number | null } }
+const empty = (): Progress => ({ version: 2, activities: {}, quiz: { lastScore: null, bestScore: null } });
 const emptyActivity = (): ActivityProgress => ({ started: true, answers: {}, attempts: 0, completed: false, readyForReview: false });
 
 function readProgress(): { progress: Progress; error: boolean } {
@@ -32,7 +32,9 @@ function readProgress(): { progress: Progress; error: boolean } {
           }
           activities[id] = { started: Boolean(value.started), answers, attempts: Number.isSafeInteger(value.attempts) && Number(value.attempts) >= 0 ? Number(value.attempts) : 0, completed: Boolean(value.completed), readyForReview: Boolean(value.readyForReview) };
         }
-        return { progress: { version: 2, activities }, error: false };
+        const quiz = 'quiz' in parsed && parsed.quiz && typeof parsed.quiz === 'object' ? parsed.quiz as { lastScore?: unknown; bestScore?: unknown } : {};
+        const score = (value: unknown) => Number.isInteger(value) && Number(value) >= 0 && Number(value) <= 10 ? Number(value) : null;
+        return { progress: { version: 2, activities, quiz: { lastScore: score(quiz.lastScore), bestScore: score(quiz.bestScore) } }, error: false };
       }
     }
     const legacy = localStorage.getItem(LEGACY_KEY);
@@ -41,7 +43,7 @@ function readProgress(): { progress: Progress; error: boolean } {
       if (typeof parsed === 'object' && parsed !== null && 'completedActivityIds' in parsed && Array.isArray(parsed.completedActivityIds)) {
         const activities: Progress['activities'] = {};
         for (const id of parsed.completedActivityIds) if (typeof id === 'string') activities[id] = { ...emptyActivity(), completed: true };
-        return { progress: { version: 2, activities }, error: false };
+        return { progress: { ...empty(), activities }, error: false };
       }
     }
     return { progress: empty(), error: false };
@@ -69,5 +71,22 @@ export function useLocalProgress() {
   const saveAnswers = useCallback((id: string, answers: Answers) => update(id, record => ({ ...record, answers, completed: false, readyForReview: false })), [update]);
   const recordResult = useCallback((id: string, correct: boolean, review: boolean) => update(id, record => ({ ...record, attempts: record.attempts + 1, completed: record.completed || (correct && !review), readyForReview: correct && review })), [update]);
 
-  return { progress, storageError, startActivity, saveAnswers, recordResult };
+  const saveQuizScore = useCallback((score: number) => {
+    if (!Number.isInteger(score) || score < 0 || score > 10) return;
+    const next = { ...current.current, quiz: { lastScore: score, bestScore: Math.max(score, current.current.quiz.bestScore ?? 0) } };
+    current.current = next;
+    setProgress(next);
+    try { localStorage.setItem(KEY, JSON.stringify(next)); setStorageError(false); }
+    catch { setStorageError(true); }
+  }, []);
+
+  const resetProgress = useCallback(() => {
+    const next = empty();
+    current.current = next;
+    setProgress(next);
+    try { localStorage.removeItem(KEY); localStorage.removeItem(LEGACY_KEY); setStorageError(false); }
+    catch { setStorageError(true); }
+  }, []);
+
+  return { progress, storageError, startActivity, saveAnswers, recordResult, saveQuizScore, resetProgress };
 }

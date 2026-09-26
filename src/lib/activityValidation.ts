@@ -41,9 +41,13 @@ function matches(field: ActivityField, raw: string): boolean {
 }
 
 export function validateActivity(activity: Activity, answers: Answers): ValidationResult {
-  const feedback = allActivityFields(activity).flatMap(field => {
+  return validateFields(allActivityFields(activity), answers, Boolean(activity.teacherReviewNote));
+}
+
+export function validateFields(fields: ActivityField[], answers: Answers, needsTeacherReview = false): ValidationResult {
+  const feedback = fields.flatMap(field => {
     if (field.validation === 'teacher' || matches(field, answers[field.id] ?? '')) return [];
     return [{ fieldId: field.id, message: field.hint, status: 'error' as const }];
   });
-  return { correct: feedback.length === 0, needsTeacherReview: Boolean(activity.teacherReviewNote), feedback };
+  return { correct: feedback.length === 0, needsTeacherReview, feedback };
 }
