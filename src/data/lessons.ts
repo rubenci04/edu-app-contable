@@ -40,14 +40,14 @@ export const lessons: Lesson[] = [
     explanation: [{ title: 'Qué expresa', paragraphs: ['Expresa la intención de comprar en las condiciones indicadas.'] }],
     example: { title: 'Un pedido de la escuela', paragraphs: ['Una escuela solicita mediante una orden de compra veinte resmas de papel a una librería.'], source: theoryExample },
     remember: 'Demuestra que se realizó un pedido, pero no acredita que la mercadería haya sido entregada ni pagada.',
-    related: ['remito', 'recibo'], practiceId: 'orden-de-compra', practicePath: '/practicar', sourceSection: 'Orden de compra',
+    related: ['remito', 'recibo'], practiceId: 'orden-de-compra', practicePath: '/practicar/orden-de-compra', sourceSection: 'Orden de compra',
   },
   {
     id: 'remito', group: 'documentos-comerciales', title: 'Remito', summary: 'El traslado y la entrega de mercaderías.',
     concept: 'El remito es el documento que acompaña el traslado y la entrega de las mercaderías.',
     example: { title: 'El envío a Los Libritos', paragraphs: ['Pisapapeles confecciona el Remito N.º 0002341 por la venta en cuenta corriente a Los Libritos. Envía 22 pegamentos vinílicos de 250 gramos y 15 blocks oficio de 80 hojas.', 'La entrega se realiza en la dirección de Los Libritos mediante el transporte Andreani.'], source: 'DOCUMENTOS COMERCIALES PDF.pdf · Actividad 2 · página 2' },
     remember: 'Permite comprobar que los productos fueron enviados y recibidos por el comprador.',
-    related: ['orden-de-compra', 'factura'], practiceId: 'remito', practicePath: '/practicar', sourceSection: '2. Remito',
+    related: ['orden-de-compra', 'factura'], practiceId: 'remito', practicePath: '/practicar/remito', sourceSection: '2. Remito',
   },
   {
     id: 'factura', group: 'documentos-comerciales', title: 'Factura', summary: 'La operación y el importe a pagar.',
@@ -62,7 +62,7 @@ export const lessons: Lesson[] = [
     concept: 'La factura A es emitida, por lo general, por un responsable inscripto en IVA cuando realiza una operación con otro responsable inscripto.',
     example: { title: 'El ejemplo del material', items: ['Precio neto: $100.000.', 'IVA 21 %: $21.000.', 'Total: $121.000.'], source: theoryExample },
     remember: 'Presenta por separado el precio neto, el IVA y el importe total.',
-    related: ['factura', 'factura-b', 'factura-c'], practiceId: 'factura-a', practicePath: '/practicar', sourceSection: 'Factura A',
+    related: ['factura', 'factura-b', 'factura-c'], practiceId: 'factura-a', practicePath: '/practicar/factura-a', sourceSection: 'Factura A',
   },
   {
     id: 'factura-b', group: 'documentos-comerciales', title: 'Factura B', summary: 'El IVA incluido en el total.',

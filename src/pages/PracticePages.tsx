@@ -1,0 +1,98 @@
+import { useEffect, useState } from 'react';
+import type { ChangeEvent } from 'react';
+import { ArrowRight, BookOpen, CheckCircle2, ClipboardList, LockKeyhole, RotateCcw, Save, SearchCheck } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Button, Card, PageHeader } from '../components/ui';
+import { activities, allActivityFields, getActivity } from '../data/activities';
+import type { Activity, ActivityField, Answers, ValidationResult } from '../data/activityTypes';
+import { useLocalProgress } from '../hooks/useLocalProgress';
+import { validateActivity } from '../lib/activityValidation';
+
+const upcoming = ['Factura B', 'Factura C', 'Nota de débito', 'Nota de crédito', 'Recibo', 'Pagaré', 'Cheque', 'Patrimonio'];
+export const activityPath = (id: string) => `/practicar/${id}`;
+
+export function PracticePage() {
+  const { progress, storageError } = useLocalProgress();
+  return <>
+    <PageHeader eyebrow="PRACTICAMOS" title="De la lectura a la práctica." description="Leé cada situación, completá el comprobante y comprobá tus respuestas." />
+    <div className="section-heading compact"><h2>Actividades disponibles</h2><span className="muted">3 documentos</span></div>
+    <div className="practice-grid">{activities.map((activity, index) => {
+      const record = progress.activities[activity.id];
+      const status = record?.completed ? 'Completada' : record?.readyForReview ? 'Revisión docente' : record?.started ? 'En curso' : 'Por empezar';
+      return <Link to={activityPath(activity.id)} key={activity.id} className="practice-link"><Card className="practice-tile"><span className="practice-icon"><ClipboardList size={25} /></span><span className="practice-step">ACTIVIDAD 0{index + 1}</span><h3>{activity.title}</h3><p>Completá el documento de la situación de Pisapapeles.</p><span className="practice-status">{status}</span><span className="practice-open">Abrir actividad <ArrowRight size={17} /></span></Card></Link>;
+    })}</div>
+    <div className="section-heading compact"><h2>Próximamente</h2></div>
+    <Card className="upcoming-list">{upcoming.map(title => <div key={title}><LockKeyhole size={16} aria-hidden="true" /><span>{title}</span><small>Próximamente</small></div>)}</Card>
+    <p className="source-note">Las tres actividades disponibles provienen de las páginas 1 a 3 de «DOCUMENTOS COMERCIALES PDF.pdf».</p>
+    {storageError && <p className="storage-warning" role="status">Tu navegador no permite guardar el progreso local. Podés usar las actividades, pero el borrador podría perderse al actualizar.</p>}
+  </>;
+}
+
+function FieldControl({ field, value, onChange, result }: { field: ActivityField; value: string; onChange: (value: string) => void; result: ValidationResult | null }) {
+  const issue = result?.feedback.find(item => item.fieldId === field.id);
+  const inputId = `activity-${field.id.replace(/[^a-z0-9]/gi, '-')}`;
+  const baseProps = { id: inputId, name: field.id, value, onChange: (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => onChange(event.target.value), 'aria-invalid': issue?.status === 'error' || undefined, 'aria-describedby': issue ? `${inputId}-feedback` : undefined };
+  return <div className={`document-field${issue ? ' has-error' : ''}${field.validation === 'teacher' ? ' teacher-field' : ''}`}>
+    <label htmlFor={inputId}>{field.label}</label>
+    {field.kind === 'choice' ? <select {...baseProps}><option value="">Seleccioná una opción</option>{field.options?.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select> :
+      <input {...baseProps} type="text" inputMode={field.kind === 'money' ? 'decimal' : field.kind === 'quantity' || field.kind === 'identifier' || field.kind === 'date' ? 'numeric' : undefined} autoComplete="off" placeholder={field.placeholder ?? (field.kind === 'money' ? '$ 0' : field.kind === 'date' ? 'DD/MM/AAAA' : '')} />}
+    {issue && <span id={`${inputId}-feedback`} className="field-feedback">{issue.message}</span>}
+    {field.validation === 'teacher' && <small>Requiere indicación docente; no se corrige automáticamente.</small>}
+  </div>;
+}
+
+function ActivityDocument({ activity, answers, onAnswer, result }: { activity: Activity; answers: Answers; onAnswer: (id: string, value: string) => void; result: ValidationResult | null }) {
+  const control = (field: ActivityField) => <FieldControl key={field.id} field={field} value={answers[field.id] ?? ''} onChange={value => onAnswer(field.id, value)} result={result} />;
+  return <Card className="document-sheet">
+    <div className="document-head"><div className="document-issuer"><strong>{activity.issuer.name}</strong><span>{activity.issuer.address}</span><span>CUIT: {activity.issuer.taxId}</span></div><div className="document-type"><span className="document-mark">{activity.documentMark}</span><strong>{activity.documentType}</strong></div></div>
+    <div className="document-main-fields">{activity.fields.slice(0, activity.id === 'factura-a' ? 3 : 2).map(control)}</div>
+    <div className="document-divider" /><h2>Datos del {activity.id === 'orden-de-compra' ? 'proveedor' : 'cliente'}</h2>
+    <div className="document-field-grid">{activity.fields.slice(activity.id === 'factura-a' ? 3 : 2).map(control)}</div>
+    <div className="document-divider" /><h2>Artículos</h2>
+    <div className="document-items">{activity.items.map((line, index) => <fieldset className="document-item" key={line.id}><legend>{line.label}</legend><div className="item-fields">{line.fields.map(control)}</div><span className="item-index">{String(index + 1).padStart(2, '0')}</span></fieldset>)}</div>
+    {activity.totals.length > 0 && <><div className="document-divider" /><div className="document-totals">{activity.totals.map(control)}</div></>}
+  </Card>;
+}
+
+export function ActivityPage() {
+  const { activityId } = useParams();
+  const activity = getActivity(activityId);
+  if (!activity) return <Card className="empty-state"><ClipboardList size={40} /><h1>No encontramos esta actividad</h1><p>Elegí una de las prácticas disponibles.</p><Link className="button" to="/practicar">Volver a Practicamos <ArrowRight size={18} /></Link></Card>;
+  return <ActivityForm key={activity.id} activity={activity} />;
+}
+
+function ActivityForm({ activity }: { activity: Activity }) {
+  const navigate = useNavigate();
+  const { progress, storageError, startActivity, saveAnswers, recordResult } = useLocalProgress();
+  const record = progress.activities[activity.id];
+  const answers = record?.answers ?? {};
+  const [result, setResult] = useState<ValidationResult | null>(null);
+  useEffect(() => { startActivity(activity.id); }, [activity.id, startActivity]);
+
+  function setAnswer(id: string, value: string) {
+    saveAnswers(activity.id, { ...answers, [id]: value });
+    if (result) setResult(null);
+  }
+  function check() {
+    const next = validateActivity(activity, answers);
+    recordResult(activity.id, next.correct, next.needsTeacherReview);
+    setResult(next);
+  }
+  function retry() {
+    const firstError = result?.feedback[0]?.fieldId;
+    setResult(null);
+    if (firstError) document.getElementById(`activity-${firstError.replace(/[^a-z0-9]/gi, '-')}`)?.focus();
+  }
+  const fieldCount = allActivityFields(activity).filter(field => field.validation !== 'teacher').length;
+  return <div className="activity-page">
+    <PageHeader eyebrow={`PRACTICAMOS · ${activity.documentType}`} title={`Actividad: ${activity.title}`} description="Leé la situación y completá el documento. Podés guardar el borrador y volver más tarde." />
+    <Card className="activity-statement"><span className="eyebrow">SITUACIÓN · {activity.source}</span><h2>Datos de la actividad</h2>{activity.statement.map(paragraph => <p key={paragraph}>{paragraph}</p>)}</Card>
+    <div className="activity-meta"><span>{record?.completed ? <><CheckCircle2 size={17} /> Completada</> : record?.readyForReview ? 'Campos verificables correctos · revisión docente' : 'Borrador local'}</span><span>{fieldCount} campos verificables · {record?.attempts ?? 0} intentos</span></div>
+    <ActivityDocument activity={activity} answers={answers} onAnswer={setAnswer} result={result} />
+    {activity.teacherReviewNote && <div className="teacher-review"><strong>IVA y total pendientes de indicación docente</strong><p>La actividad no especifica la tasa de IVA aplicable. Estos campos pueden completarse, pero no se corrigen automáticamente ni permiten marcar la factura como terminada.</p></div>}
+    {result && <div className={`activity-feedback ${result.correct ? 'is-correct' : 'has-errors'}`} role="status" aria-live="polite"><strong>{result.correct ? result.needsTeacherReview ? 'Los campos verificables están correctos.' : '¡Muy bien! Completaste correctamente el documento.' : `Hay ${result.feedback.length} ${result.feedback.length === 1 ? 'campo para revisar' : 'campos para revisar'}.`}</strong><p>{result.correct ? result.needsTeacherReview ? 'IVA y total necesitan confirmación docente antes de dar por terminada la Factura A.' : 'Tu progreso quedó guardado en este dispositivo.' : 'Encontrarás una pista debajo de cada campo que necesita corrección.'}</p></div>}
+    <div className="activity-actions"><Button type="button" onClick={check}><SearchCheck size={18} /> COMPROBAR</Button><Button type="button" className="button-secondary" onClick={() => navigate(activity.nextId ? activityPath(activity.nextId) : '/practicar')}><Save size={18} /> GUARDAR Y CONTINUAR</Button>{result && !result.correct && <Button type="button" className="button-quiet" onClick={retry}><RotateCcw size={17} /> REINTENTAR</Button>}<Link className="button button-quiet" to={activity.theoryPath}><BookOpen size={18} /> VOLVER A LA TEORÍA</Link></div>
+    {result?.correct && !result.needsTeacherReview && activity.nextId && <Link className="next-activity" to={activityPath(activity.nextId)}>SIGUIENTE ACTIVIDAD <ArrowRight size={18} /></Link>}
+    {storageError && <p className="storage-warning" role="status">El navegador no permite guardar datos locales. El borrador podría perderse al actualizar.</p>}
+  </div>;
+}

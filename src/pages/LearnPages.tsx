@@ -53,7 +53,7 @@ export function LessonPage() {
       return <Link key={id} to={lessonPath(id)}>{related.title}<ArrowRight size={15} aria-hidden="true" /></Link>;
     })}</div></section>
     <p className="source-note">Fuente de teoría: {theorySource} · {lesson.sourceSection}.</p>
-    <div className="lesson-practice"><Link className="button" to={lesson.practicePath}><PencilLine size={18} aria-hidden="true" /> PRACTICAR ESTE TEMA</Link><p>Las actividades interactivas estarán disponibles próximamente.</p></div>
+    <div className="lesson-practice"><Link className="button" to={lesson.practicePath}><PencilLine size={18} aria-hidden="true" /> PRACTICAR ESTE TEMA</Link>{lesson.practicePath === '/practicar' && <p>Las actividades interactivas de este tema estarán disponibles próximamente.</p>}</div>
     <nav className="lesson-pagination" aria-label="Recorrido de lecciones">
       {previous && <Link to={lessonPath(previous.id)}><ArrowLeft size={16} aria-hidden="true" /><span><small>TEMA ANTERIOR</small>{previous.title}</span></Link>}
       {next && <Link className="lesson-next" to={lessonPath(next.id)}><span><small>SIGUIENTE TEMA</small>{next.title}</span><ArrowRight size={16} aria-hidden="true" /></Link>}

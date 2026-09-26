@@ -19,7 +19,7 @@ export interface Lesson {
   formulas?: string[];
   related: string[];
   practiceId: string;
-  practicePath: '/practicar';
+  practicePath: '/practicar' | `/practicar/${string}`;
   sourceSection: string;
   comparison?: 'invoices';
 }
