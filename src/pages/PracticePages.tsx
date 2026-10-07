@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { ArrowRight, BookOpen, CheckCircle2, ClipboardList, RotateCcw, Save, SearchCheck } from 'lucide-react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Button, Card, PageHeader } from '../components/ui';
 import { activities, allActivityFields, getActivity } from '../data/activities';
 import type { Activity, ActivityField, Answers, ValidationResult } from '../data/activityTypes';
 import { useLocalProgress } from '../hooks/useLocalProgress';
-import { calculatedCents, formatCents, validateActivity } from '../lib/activityValidation';
+import { SHORT_YEAR_MESSAGE, calculatedCents, formatCents, hasShortYear, validateActivity } from '../lib/activityValidation';
 import { patrimonyActivities, patrimonyPath } from '../data/patrimonyActivities';
 import { PdfActions } from '../components/PdfActions';
 import { activityPdfModel } from '../lib/activityPdf';
@@ -43,11 +43,12 @@ export function FieldControl({ field, value, onChange, result }: { field: Activi
     <small>{field.calculated === 'amount' ? 'Se calcula solo: cantidad × precio unitario.' : 'Se calcula solo: suma de los importes.'}</small>
     {issue && <span id={`${inputId}-feedback`} className="field-feedback">{issue.message}</span>}
   </div>;
-  return <div className={`document-field${issue ? ' has-error' : ''}${field.validation === 'teacher' ? ' teacher-field' : ''}`}>
+  const shortYear = field.kind === 'date' && hasShortYear(value);
+  return <div className={`document-field${issue || shortYear ? ' has-error' : ''}${field.validation === 'teacher' ? ' teacher-field' : ''}`}>
     <label htmlFor={inputId}>{field.label}</label>
     {field.kind === 'choice' ? <select {...baseProps}><option value="">Seleccioná una opción</option>{field.options?.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select> :
       <input {...baseProps} type="text" inputMode={field.kind === 'money' ? 'decimal' : field.kind === 'quantity' || field.kind === 'identifier' || field.kind === 'date' ? 'numeric' : undefined} autoComplete="off" placeholder={field.placeholder ?? (field.kind === 'money' ? '$ 0' : field.kind === 'date' ? 'DD/MM/AAAA' : '')} />}
-    {issue && <span id={`${inputId}-feedback`} className="field-feedback">{issue.message}</span>}
+    {issue ? <span id={`${inputId}-feedback`} className="field-feedback">{issue.message}</span> : shortYear && <span className="field-feedback" role="status">{SHORT_YEAR_MESSAGE}</span>}
     {field.validation === 'teacher' && <small>Requiere indicación docente; no se corrige automáticamente.</small>}
   </div>;
 }
@@ -77,21 +78,27 @@ export function ActivityPage() {
 }
 
 function ActivityForm({ activity }: { activity: Activity }) {
-  const navigate = useNavigate();
   const { progress, storageError, startActivity, saveAnswers, recordResult } = useLocalProgress();
   const record = progress.activities[activity.id];
   const answers = record?.answers ?? {};
   const [result, setResult] = useState<ValidationResult | null>(null);
+  const [continued, setContinued] = useState(false);
+  const canDownload = Boolean(record?.completed || record?.readyForReview);
   useEffect(() => { startActivity(activity.id); }, [activity.id, startActivity]);
 
   function setAnswer(id: string, value: string) {
     saveAnswers(activity.id, { ...answers, [id]: value });
     if (result) setResult(null);
+    setContinued(false);
   }
   function check() {
     const next = validateActivity(activity, answers);
     recordResult(activity.id, next.correct, next.needsTeacherReview);
     setResult(next);
+  }
+  function saveAndContinue() {
+    setContinued(true);
+    if (canDownload) document.getElementById('pdf-actions')?.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   }
   function retry() {
     const firstError = result?.feedback[0]?.fieldId;
@@ -106,9 +113,10 @@ function ActivityForm({ activity }: { activity: Activity }) {
     <ActivityDocument activity={activity} answers={answers} onAnswer={setAnswer} result={result} />
     {activity.teacherReviewNote && <div className="teacher-review"><strong>{activity.teacherReviewTitle ?? 'Campos pendientes de indicación docente'}</strong><p>{activity.teacherReviewNote.replace(/^TODO_TEACHER_CONFIRMATION:\s*/, '')}</p></div>}
     {result && <div className={`activity-feedback ${result.correct ? 'is-correct' : 'has-errors'}`} role="status" aria-live="polite"><strong>{result.correct ? result.needsTeacherReview ? 'Los campos verificables están correctos.' : '¡Muy bien! Completaste correctamente el documento.' : `Hay ${result.feedback.length} ${result.feedback.length === 1 ? 'campo para revisar' : 'campos para revisar'}.`}</strong><p>{result.correct ? result.needsTeacherReview ? 'Los campos señalados necesitan confirmación docente antes de dar por terminada la actividad.' : 'Tu progreso quedó guardado en este dispositivo.' : 'Encontrarás una pista debajo de cada campo que necesita corrección.'}</p></div>}
-    {record?.completed && <PdfActions buildModel={() => activityPdfModel(activity, answers, record.attempts)} />}
-    <div className="activity-actions"><Button type="button" onClick={check}><SearchCheck size={18} /> COMPROBAR</Button><Button type="button" className="button-secondary" onClick={() => navigate(activity.nextId ? activityPath(activity.nextId) : '/practicar')}><Save size={18} /> GUARDAR Y CONTINUAR</Button>{result && !result.correct && <Button type="button" className="button-quiet" onClick={retry}><RotateCcw size={17} /> REINTENTAR</Button>}<Link className="button button-quiet" to={activity.theoryPath}><BookOpen size={18} /> VOLVER A LA TEORÍA</Link></div>
-    {result?.correct && activity.nextId && <Link className="next-activity" to={activityPath(activity.nextId)}>SIGUIENTE ACTIVIDAD <ArrowRight size={18} /></Link>}
+    {canDownload && <PdfActions buildModel={() => activityPdfModel(activity, answers, record?.attempts ?? 0, !record?.completed)} />}
+    <div className="activity-actions"><Button type="button" onClick={check}><SearchCheck size={18} /> COMPROBAR</Button><Button type="button" className="button-secondary" onClick={saveAndContinue}><Save size={18} /> GUARDAR Y CONTINUAR</Button>{result && !result.correct && <Button type="button" className="button-quiet" onClick={retry}><RotateCcw size={17} /> REINTENTAR</Button>}<Link className="button button-quiet" to={activity.theoryPath}><BookOpen size={18} /> VOLVER A LA TEORÍA</Link></div>
+    {continued && !canDownload && <div className="pdf-hint" role="status"><p>Completá y comprobá el documento para descargar el PDF</p><Link className="button button-quiet" to={activity.nextId ? activityPath(activity.nextId) : '/practicar'}>CONTINUAR IGUAL <ArrowRight size={17} /></Link></div>}
+    {(result?.correct || (continued && canDownload)) && activity.nextId && <Link className="next-activity" to={activityPath(activity.nextId)}>SIGUIENTE ACTIVIDAD <ArrowRight size={18} /></Link>}
     {storageError && <p className="storage-warning" role="status">El navegador no permite guardar datos locales. El borrador podría perderse al actualizar.</p>}
   </div>;
 }

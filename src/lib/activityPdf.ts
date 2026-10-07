@@ -3,7 +3,9 @@ import type { PatrimonyActivity } from '../data/patrimonyActivities';
 import { calculatedCents, formatCents, moneyToCents } from './activityValidation';
 import type { PdfModel, PdfRow, PdfSection } from './pdf';
 
-const status = (attempts: number) => ['Estado: Completada correctamente', `Intentos: ${attempts}`];
+const status = (attempts: number, pendingReview = false) => pendingReview
+  ? ['Estado: Campos verificables correctos', 'Pendiente de revisión docente: hay datos sin confirmar.', `Intentos: ${attempts}`]
+  : ['Estado: Completada correctamente', `Intentos: ${attempts}`];
 
 function displayValue(field: ActivityField, answers: Answers, calculated: Record<string, number | null>): string {
   if (field.calculated) {
@@ -19,7 +21,7 @@ function displayValue(field: ActivityField, answers: Answers, calculated: Record
   return raw;
 }
 
-export function activityPdfModel(activity: Activity, answers: Answers, attempts: number): PdfModel {
+export function activityPdfModel(activity: Activity, answers: Answers, attempts: number, pendingReview = false): PdfModel {
   const calculated = calculatedCents(activity, answers);
   const rows = (fields: ActivityField[], labelPrefix = ''): PdfRow[] => fields.map(field => ({ label: labelPrefix + field.label, value: displayValue(field, answers, calculated) }));
   const headCount = activity.headFieldCount ?? (activity.id === 'factura-a' ? 3 : 2);
@@ -36,7 +38,7 @@ export function activityPdfModel(activity: Activity, answers: Answers, attempts:
     title: activity.title,
     heading: { name: activity.issuer.name, lines: [activity.issuer.address, activity.issuer.taxId && `CUIT: ${activity.issuer.taxId}`].filter((line): line is string => Boolean(line)), type: activity.documentType, mark: activity.documentMark || undefined },
     sections,
-    statusLines: status(attempts),
+    statusLines: status(attempts, pendingReview),
   };
 }
 

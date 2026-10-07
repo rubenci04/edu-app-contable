@@ -40,7 +40,7 @@ export function PdfActions({ buildModel }: { buildModel: () => PdfModel }) {
     }
   }
 
-  return <div className="pdf-actions">
+  return <div className="pdf-actions" id="pdf-actions">
     <div className="pdf-buttons">
       <Button type="button" onClick={download}><Download size={18} /> DESCARGAR PDF</Button>
       <Button type="button" className="button-secondary" onClick={share}><Share2 size={18} /> COMPARTIR</Button>

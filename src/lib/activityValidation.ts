@@ -89,10 +89,15 @@ export function validateActivity(activity: Activity, answers: Answers): Validati
   return { ...result, feedback };
 }
 
+export const SHORT_YEAR_MESSAGE = 'Escribí el año con 4 cifras. Por ejemplo: 01/05/2026.';
+export const hasShortYear = (raw: string) => /^\d{1,2}\/\d{1,2}\/\d{2}$/.test(raw.trim());
+
 export function validateFields(fields: ActivityField[], answers: Answers, needsTeacherReview = false): ValidationResult {
   const feedback = fields.flatMap(field => {
-    if (field.validation === 'teacher' || matches(field, answers[field.id] ?? '')) return [];
-    return [{ fieldId: field.id, message: field.hint, status: 'error' as const }];
+    const raw = answers[field.id] ?? '';
+    if (field.validation === 'teacher' || matches(field, raw)) return [];
+    const message = field.kind === 'date' && hasShortYear(raw) ? SHORT_YEAR_MESSAGE : field.hint;
+    return [{ fieldId: field.id, message, status: 'error' as const }];
   });
   return { correct: feedback.length === 0, needsTeacherReview, feedback };
 }
