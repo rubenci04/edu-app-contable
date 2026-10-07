@@ -21,7 +21,7 @@ function displayValue(field: ActivityField, answers: Answers, calculated: Record
   return raw;
 }
 
-export function activityPdfModel(activity: Activity, answers: Answers, attempts: number, pendingReview = false): PdfModel {
+export function activityPdfModel(activity: Activity, answers: Answers, attempts: number, pendingReview = false, variantSeed?: number): PdfModel {
   const calculated = calculatedCents(activity, answers);
   const rows = (fields: ActivityField[], labelPrefix = ''): PdfRow[] => fields.map(field => ({ label: labelPrefix + field.label, value: displayValue(field, answers, calculated) }));
   const headCount = activity.headFieldCount ?? (activity.id === 'factura-a' ? 3 : 2);
@@ -35,7 +35,7 @@ export function activityPdfModel(activity: Activity, answers: Answers, attempts:
   }
   if (activity.totals.length > 0) sections.push({ title: 'Totales', rows: rows(activity.totals) });
   return {
-    title: activity.title,
+    title: variantSeed ? `${activity.title} · consigna ${variantSeed}` : activity.title,
     heading: { name: activity.issuer.name, lines: [activity.issuer.address, activity.issuer.taxId && `CUIT: ${activity.issuer.taxId}`].filter((line): line is string => Boolean(line)), type: activity.documentType, mark: activity.documentMark || undefined },
     sections,
     statusLines: status(attempts, pendingReview),

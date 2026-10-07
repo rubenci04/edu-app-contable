@@ -4,6 +4,7 @@ import { ArrowDown, ArrowLeft, ArrowRight, BookOpen, Check, ChevronRight, Compas
 import { Button, Card, PageHeader, ProgressBar } from './components/ui';
 import { sections } from './data/sections';
 import { useLocalProgress } from './hooks/useLocalProgress';
+import { useVariantProgress } from './hooks/useVariantProgress';
 import { getLesson } from './data/lessons';
 import { LearnPage, LessonPage } from './pages/LearnPages';
 import { getActivity } from './data/activities';
@@ -75,6 +76,10 @@ function HomePage() {
 
 function ProgressPage({ profile, saveProfile, profileStorageError }: { profile: StudentProfile; saveProfile: (profile: StudentProfile) => void; profileStorageError: boolean }) {
   const { progress, storageError, resetProgress } = useLocalProgress();
+  const { variants, resetVariants } = useVariantProgress();
+  const extraRecords = Object.values(variants);
+  const extraPracticed = extraRecords.filter(record => record.attempts > 0 || Object.values(record.answers).some(answer => answer.trim() !== '')).length;
+  const extraCompleted = extraRecords.filter(record => record.completed).length;
   const [confirmReset, setConfirmReset] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const completedDocuments = activities.filter(activity => progress.activities[activity.id]?.completed);
@@ -89,10 +94,10 @@ function ProgressPage({ profile, saveProfile, profileStorageError }: { profile: 
       {profileStorageError && <p className="storage-warning" role="status">El navegador no permite guardar el perfil localmente.</p>}
     </Card>
     <div className="stats-grid"><Card className="stat-card"><FileText size={23} /><span>Documentos completados</span><strong>{completedDocuments.length}/{activities.length}</strong><p>{completedDocuments.length ? completedDocuments.map(item => item.title).join(' · ') : 'Todavía no completaste documentos.'}</p></Card><Card className="stat-card"><BookOpen size={23} /><span>Patrimonio completado</span><strong>{completedPatrimony.length}/{patrimonyActivities.length}</strong><p>{completedPatrimony.length ? completedPatrimony.map(item => item.title).join(' · ') : 'Todavía no completaste ejercicios de patrimonio.'}</p></Card><Card className="stat-card"><Trophy size={23} /><span>Mejor puntaje del juego</span><strong>{progress.quiz.bestScore === null ? '—' : `${progress.quiz.bestScore}/10`}</strong><p>Último puntaje: {progress.quiz.lastScore === null ? '—' : `${progress.quiz.lastScore}/10`}. No es una evaluación oficial.</p></Card></div>
-    <Card className="progress-card"><div className="section-heading compact"><h2>Tu recorrido</h2><span className="status-pill">{started ? 'En curso' : 'Por empezar'}</span></div><div className="progress-label"><span>Progreso general · {completed} de {total} actividades</span><strong>{percent} %</strong></div><ProgressBar value={percent} label="Progreso general de actividades" /><p>El porcentaje incluye las {activities.length} prácticas de documentos y los {patrimonyActivities.length} ejercicios de patrimonio. Las actividades con datos pendientes de indicación docente permanecen en revisión y no se marcan como completadas.</p></Card>
+    <Card className="progress-card"><div className="section-heading compact"><h2>Tu recorrido</h2><span className="status-pill">{started ? 'En curso' : 'Por empezar'}</span></div><div className="progress-label"><span>Progreso general · {completed} de {total} actividades</span><strong>{percent} %</strong></div><ProgressBar value={percent} label="Progreso general de actividades" /><p className="extra-progress">Consignas extra: {extraPracticed} practicadas, {extraCompleted} completadas</p><p>El porcentaje incluye las {activities.length} prácticas de documentos y los {patrimonyActivities.length} ejercicios de patrimonio. Las actividades con datos pendientes de indicación docente permanecen en revisión y no se marcan como completadas.</p></Card>
     <Card className="progress-list"><h2>Ejercicios de patrimonio</h2><div>{patrimonyActivities.map(activity => <Link to={patrimonyPath(activity.id)} key={activity.id}><span>{activity.title}</span><strong>{progress.activities[activity.id]?.completed ? 'Completada' : progress.activities[activity.id]?.started ? 'En curso' : 'Por empezar'}</strong></Link>)}</div></Card>
     <div className="pending-notice"><Sprout size={22} /><div><strong>Tus datos quedan en este dispositivo</strong><p>{storageError ? 'El navegador no permite guardar datos locales. El progreso no podrá conservarse.' : 'Los borradores, avances y puntajes se guardan solo en este navegador.'}</p></div></div>
-    <div className="reset-area">{confirmReset ? <Card className="reset-confirm" role="group" aria-label="Confirmar reinicio de progreso"><h2>¿Reiniciar todo el progreso?</h2><p>Se borrarán borradores, actividades completadas, intentos y puntajes guardados en este navegador. Tu nombre, edad y curso se conservarán.</p><div><Button type="button" className="button-quiet" onClick={() => setConfirmReset(false)}>CANCELAR</Button><Button type="button" className="button-danger" onClick={() => { resetProgress(); setConfirmReset(false); }}>SÍ, REINICIAR PROGRESO</Button></div></Card> : <Button type="button" className="button-quiet" onClick={() => setConfirmReset(true)}><RotateCcw size={18} /> Reiniciar progreso</Button>}</div>
+    <div className="reset-area">{confirmReset ? <Card className="reset-confirm" role="group" aria-label="Confirmar reinicio de progreso"><h2>¿Reiniciar todo el progreso?</h2><p>Se borrarán borradores, actividades completadas, consignas extra, intentos y puntajes guardados en este navegador. Tu nombre, edad y curso se conservarán.</p><div><Button type="button" className="button-quiet" onClick={() => setConfirmReset(false)}>CANCELAR</Button><Button type="button" className="button-danger" onClick={() => { resetProgress(); resetVariants(); setConfirmReset(false); }}>SÍ, REINICIAR PROGRESO</Button></div></Card> : <Button type="button" className="button-quiet" onClick={() => setConfirmReset(true)}><RotateCcw size={18} /> Reiniciar progreso</Button>}</div>
   </>;
 }
 

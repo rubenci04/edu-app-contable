@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { ArrowRight, BookOpen, CheckCircle2, ClipboardList, RotateCcw, Save, SearchCheck } from 'lucide-react';
-import { Link, useParams } from 'react-router-dom';
+import { ArrowRight, BookOpen, CheckCircle2, ClipboardList, Copy, RotateCcw, Save, SearchCheck, Shuffle, Undo2 } from 'lucide-react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Button, Card, PageHeader } from '../components/ui';
 import { activities, allActivityFields, getActivity } from '../data/activities';
 import type { Activity, ActivityField, Answers, ValidationResult } from '../data/activityTypes';
@@ -10,6 +10,9 @@ import { SHORT_YEAR_MESSAGE, calculatedCents, formatCents, hasShortYear, validat
 import { patrimonyActivities, patrimonyPath } from '../data/patrimonyActivities';
 import { PdfActions } from '../components/PdfActions';
 import { activityPdfModel } from '../lib/activityPdf';
+import { useVariantProgress } from '../hooks/useVariantProgress';
+import { generateVariant, parseSeed, randomSeed, supportsVariants } from '../lib/variants';
+import type { GeneratedVariant } from '../lib/variants';
 
 export const activityPath = (id: string) => `/practicar/${id}`;
 
@@ -73,27 +76,57 @@ function ActivityDocument({ activity, answers, onAnswer, result }: { activity: A
 export function ActivityPage() {
   const { activityId } = useParams();
   const activity = getActivity(activityId);
+  const [params] = useSearchParams();
+  const rawSeed = params.get('v');
+  const canVary = Boolean(activity && supportsVariants(activity.id));
+  const seed = canVary && rawSeed !== null ? parseSeed(rawSeed) : null;
+  const variant = useMemo(() => (activity && seed ? generateVariant(activity.id, seed) : undefined), [activity, seed]);
   if (!activity) return <Card className="empty-state"><ClipboardList size={40} /><h1>No encontramos esta actividad</h1><p>Elegí una de las prácticas disponibles.</p><Link className="button" to="/practicar">Volver a Practicamos <ArrowRight size={18} /></Link></Card>;
-  return <ActivityForm key={activity.id} activity={activity} />;
+  return <ActivityForm key={variant?.storageId ?? activity.id} activity={variant?.activity ?? activity} variant={variant} invalidSeed={canVary && rawSeed !== null && seed === null} />;
 }
 
-function ActivityForm({ activity }: { activity: Activity }) {
-  const { progress, storageError, startActivity, saveAnswers, recordResult } = useLocalProgress();
-  const record = progress.activities[activity.id];
+function VariantTools({ activity, variant, invalidSeed }: { activity: Activity; variant?: GeneratedVariant; invalidSeed: boolean }) {
+  const [notice, setNotice] = useState('');
+  async function copyLink() {
+    if (!variant) return;
+    const url = new URL(window.location.href);
+    url.search = `?v=${variant.seed}`;
+    url.hash = '';
+    try { await navigator.clipboard.writeText(url.href); setNotice('Enlace copiado.'); }
+    catch { setNotice(`No se pudo copiar. Copiá este enlace: ${url.href}`); }
+  }
+  return <>
+    {invalidSeed && <p className="variant-note" role="status">El número de consigna no es válido. Mostramos la consigna original.</p>}
+    {variant && <div className="variant-banner" role="region" aria-label="Consigna generada para practicar">
+      <strong>Consigna n.º {variant.seed} · generada para practicar</strong>
+      <div className="variant-actions"><Button type="button" className="button-quiet" onClick={copyLink}><Copy size={17} /> COPIAR ENLACE</Button><Link className="button button-quiet" to={activityPath(activity.id)}><Undo2 size={17} /> VOLVER A LA CONSIGNA ORIGINAL</Link></div>
+      {notice && <p role="status" aria-live="polite">{notice}</p>}
+    </div>}
+  </>;
+}
+
+function ActivityForm({ activity, variant, invalidSeed = false }: { activity: Activity; variant?: GeneratedVariant; invalidSeed?: boolean }) {
+  const navigate = useNavigate();
+  const original = useLocalProgress();
+  const extra = useVariantProgress();
+  const recordId = variant?.storageId ?? activity.id;
+  const record = variant ? extra.variants[recordId] : original.progress.activities[activity.id];
+  const storageError = variant ? extra.storageError : original.storageError;
+  const { startActivity, saveAnswers, recordResult } = variant ? extra : original;
   const answers = record?.answers ?? {};
   const [result, setResult] = useState<ValidationResult | null>(null);
   const [continued, setContinued] = useState(false);
   const canDownload = Boolean(record?.completed || record?.readyForReview);
-  useEffect(() => { startActivity(activity.id); }, [activity.id, startActivity]);
+  useEffect(() => { startActivity(recordId); }, [recordId, startActivity]);
 
   function setAnswer(id: string, value: string) {
-    saveAnswers(activity.id, { ...answers, [id]: value });
+    saveAnswers(recordId, { ...answers, [id]: value });
     if (result) setResult(null);
     setContinued(false);
   }
   function check() {
     const next = validateActivity(activity, answers);
-    recordResult(activity.id, next.correct, next.needsTeacherReview);
+    recordResult(recordId, next.correct, next.needsTeacherReview);
     setResult(next);
   }
   function saveAndContinue() {
@@ -108,12 +141,14 @@ function ActivityForm({ activity }: { activity: Activity }) {
   const fieldCount = allActivityFields(activity).filter(field => field.validation !== 'teacher').length;
   return <div className="activity-page">
     <PageHeader eyebrow={`PRACTICAMOS · ${activity.documentType}`} title={`Actividad: ${activity.title}`} description="Leé la situación y completá el documento. Podés guardar el borrador y volver más tarde." />
-    <Card className="activity-statement"><span className="eyebrow">SITUACIÓN · {activity.source}</span><h2>Datos de la actividad</h2>{activity.statement.map(paragraph => <p key={paragraph}>{paragraph}</p>)}</Card>
+    <VariantTools activity={activity} variant={variant} invalidSeed={invalidSeed} />
+    <Card className="activity-statement"><span className="eyebrow">SITUACIÓN · {activity.source}{variant ? ` · consigna n.º ${variant.seed}` : ''}</span><h2>Datos de la actividad</h2>{activity.statement.map(paragraph => <p key={paragraph}>{paragraph}</p>)}</Card>
+    {supportsVariants(activity.id) && <div className="variant-more"><Button type="button" className="button-secondary" onClick={() => navigate(`${activityPath(activity.id)}?v=${randomSeed()}`)}><Shuffle size={18} /> PRACTICAR CON OTRA CONSIGNA</Button></div>}
     <div className="activity-meta"><span>{record?.completed ? <><CheckCircle2 size={17} /> Completada</> : record?.readyForReview ? 'Campos verificables correctos · revisión docente' : 'Borrador local'}</span><span>{fieldCount} campos verificables · {record?.attempts ?? 0} intentos</span></div>
     <ActivityDocument activity={activity} answers={answers} onAnswer={setAnswer} result={result} />
     {activity.teacherReviewNote && <div className="teacher-review"><strong>{activity.teacherReviewTitle ?? 'Campos pendientes de indicación docente'}</strong><p>{activity.teacherReviewNote.replace(/^TODO_TEACHER_CONFIRMATION:\s*/, '')}</p></div>}
     {result && <div className={`activity-feedback ${result.correct ? 'is-correct' : 'has-errors'}`} role="status" aria-live="polite"><strong>{result.correct ? result.needsTeacherReview ? 'Los campos verificables están correctos.' : '¡Muy bien! Completaste correctamente el documento.' : `Hay ${result.feedback.length} ${result.feedback.length === 1 ? 'campo para revisar' : 'campos para revisar'}.`}</strong><p>{result.correct ? result.needsTeacherReview ? 'Los campos señalados necesitan confirmación docente antes de dar por terminada la actividad.' : 'Tu progreso quedó guardado en este dispositivo.' : 'Encontrarás una pista debajo de cada campo que necesita corrección.'}</p></div>}
-    {canDownload && <PdfActions buildModel={() => activityPdfModel(activity, answers, record?.attempts ?? 0, !record?.completed)} />}
+    {canDownload && <PdfActions buildModel={() => activityPdfModel(activity, answers, record?.attempts ?? 0, !record?.completed, variant?.seed)} />}
     <div className="activity-actions"><Button type="button" onClick={check}><SearchCheck size={18} /> COMPROBAR</Button><Button type="button" className="button-secondary" onClick={saveAndContinue}><Save size={18} /> GUARDAR Y CONTINUAR</Button>{result && !result.correct && <Button type="button" className="button-quiet" onClick={retry}><RotateCcw size={17} /> REINTENTAR</Button>}<Link className="button button-quiet" to={activity.theoryPath}><BookOpen size={18} /> VOLVER A LA TEORÍA</Link></div>
     {continued && !canDownload && <div className="pdf-hint" role="status"><p>Completá y comprobá el documento para descargar el PDF</p><Link className="button button-quiet" to={activity.nextId ? activityPath(activity.nextId) : '/practicar'}>CONTINUAR IGUAL <ArrowRight size={17} /></Link></div>}
     {(result?.correct || (continued && canDownload)) && activity.nextId && <Link className="next-activity" to={activityPath(activity.nextId)}>SIGUIENTE ACTIVIDAD <ArrowRight size={18} /></Link>}
