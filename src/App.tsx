@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom';
-import { ArrowDown, ArrowLeft, ArrowRight, BookOpen, Check, ChevronRight, Compass, FileText, GraduationCap, Home, Leaf, RotateCcw, Sparkles, Sprout, Trophy } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowRight, BookOpen, Check, ChevronRight, Compass, FileText, GraduationCap, Heart, Home, Info, Leaf, Menu, RotateCcw, Sparkles, Sprout, Trophy, X } from 'lucide-react';
 import { Button, Card, PageHeader, ProgressBar } from './components/ui';
 import { sections } from './data/sections';
 import { useLocalProgress } from './hooks/useLocalProgress';
@@ -14,6 +14,33 @@ import { PlayPage } from './pages/PlayPage';
 import { activities } from './data/activities';
 import { StudentProfileForm, WelcomeScreen } from './components/StudentProfileForm';
 import { useLocalStudent, type StudentProfile } from './hooks/useLocalStudent';
+
+const menuLinks = [
+  { to: '/', label: 'Inicio', icon: Home },
+  ...sections.map(({ path, nav, icon }) => ({ to: path, label: nav, icon })),
+  { to: '/acerca-de', label: 'Acerca de', icon: Info },
+  { to: '/nuestra-historia', label: 'Nuestra historia', icon: Heart },
+];
+
+function MobileMenu() {
+  const [open, setOpen] = useState(false);
+  const { pathname } = useLocation();
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') { setOpen(false); buttonRef.current?.focus(); } };
+    const onPointer = (event: MouseEvent) => { if (!wrapRef.current?.contains(event.target as Node)) setOpen(false); };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onPointer);
+    return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('mousedown', onPointer); };
+  }, [open]);
+  return <div className="mobile-menu" ref={wrapRef} onBlur={event => { if (open && !wrapRef.current?.contains(event.relatedTarget as Node | null)) setOpen(false); }}>
+    <button type="button" ref={buttonRef} className="menu-button" aria-expanded={open} aria-controls="site-menu" aria-label={open ? 'Cerrar menú' : 'Abrir menú'} onClick={() => setOpen(value => !value)}>{open ? <X size={21} /> : <Menu size={21} />}<span className="menu-label">Menú</span></button>
+    {open && <nav id="site-menu" className="menu-panel" aria-label="Menú principal">{menuLinks.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to} end={to === '/'}><Icon size={19} />{label}</NavLink>)}</nav>}
+  </div>;
+}
 
 function HomePage() {
   const cardsRef = useRef<HTMLElement>(null);
@@ -117,7 +144,7 @@ export function App() {
   if (!profile) return <WelcomeScreen onSave={saveProfile} storageError={profileStorageError} />;
   return <div className="app-shell">
     <a href="#main" className="skip-link">Saltar al contenido</a>
-    <header className="site-header"><div className="header-inner"><Link className="brand" to="/" aria-label="Edu App Contable, inicio"><span className="brand-mark"><GraduationCap size={24} /></span><span>Edu App <strong>Contable</strong><small>APRENDER PARA AVANZAR</small></span></Link><nav aria-label="Navegación principal" className="desktop-nav"><NavLink to="/" end><Home size={17} /> Inicio</NavLink>{sections.map(({ path, nav, icon: Icon }) => <NavLink key={path} to={path}><Icon size={17} />{nav}</NavLink>)}</nav><span className="header-badge"><span /> Hola, {profile.name}</span></div></header>
+    <header className="site-header"><div className="header-inner"><Link className="brand" to="/" aria-label="Edu App Contable, inicio"><span className="brand-mark"><GraduationCap size={24} /></span><span>Edu App <strong>Contable</strong><small>APRENDER PARA AVANZAR</small></span></Link><nav aria-label="Navegación principal" className="desktop-nav">{menuLinks.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to} end={to === '/'}><Icon size={17} />{label}</NavLink>)}</nav><span className="header-badge"><span /> Hola, {profile.name}</span><MobileMenu /></div></header>
     <main id="main" ref={mainRef} tabIndex={-1} className="main-container">
       <div className="breadcrumb"><Link to="/">Inicio</Link>{isLessonRoute ? <><ChevronRight size={14} /><Link to="/aprender">Aprender</Link><ChevronRight size={14} /><span aria-current="page">{currentLesson?.title ?? 'Tema no encontrado'}</span></> : isActivityRoute || isPatrimonyRoute ? <><ChevronRight size={14} /><Link to="/practicar">Practicar</Link><ChevronRight size={14} /><span aria-current="page">{currentActivity?.title ?? currentPatrimony?.title ?? 'Actividad no encontrada'}</span></> : location.pathname !== '/' ? <><ChevronRight size={14} /><span>{location.pathname === '/acerca-de' ? 'Acerca de' : location.pathname === '/nuestra-historia' ? 'Nuestra historia' : sections.find(item => item.path === location.pathname)?.nav ?? 'Página no encontrada'}</span></> : <><ChevronRight size={14} /><span>Tu espacio</span></>}</div>
       {location.pathname !== '/' && <Link to={isLessonRoute ? '/aprender' : isActivityRoute || isPatrimonyRoute ? '/practicar' : '/'} className="back-link"><ArrowLeft size={16} />{isLessonRoute ? 'Volver a los temas' : isActivityRoute || isPatrimonyRoute ? 'Volver a Practicamos' : 'Volver al inicio'}</Link>}
