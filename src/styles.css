@@ -260,6 +260,12 @@ h1,h2,h3,p { margin: 0; }
 .storage-warning { background: var(--bad-bg); color: var(--bad-text); }
 .activity-actions { display: grid; gap: 10px; margin: 25px 0; }
 .activity-actions .button { width: 100%; text-align: center; }
+.pdf-actions { margin-top: 20px; }
+.pdf-buttons { display: grid; gap: 10px; }
+.pdf-buttons .button { width: 100%; text-align: center; }
+.pdf-actions p { margin-top: 10px; font-size: 13px; line-height: 1.6; color: var(--ink-soft); }
+.pdf-actions p:empty { display: none; }
+@media (min-width: 560px) { .pdf-buttons { display: flex; flex-wrap: wrap; } .pdf-buttons .button { width: auto; } }
 .button-secondary { color: var(--ink); background: var(--pastel); border-color: var(--pastel); }
 .button-secondary:hover { color: var(--ink); background: var(--pastel); border-color: var(--primary); }
 .button-quiet { color: var(--primary-hover); background: var(--surface); border-color: var(--border); }

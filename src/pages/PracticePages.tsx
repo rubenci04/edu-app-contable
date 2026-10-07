@@ -8,6 +8,8 @@ import type { Activity, ActivityField, Answers, ValidationResult } from '../data
 import { useLocalProgress } from '../hooks/useLocalProgress';
 import { calculatedCents, formatCents, validateActivity } from '../lib/activityValidation';
 import { patrimonyActivities, patrimonyPath } from '../data/patrimonyActivities';
+import { PdfActions } from '../components/PdfActions';
+import { activityPdfModel } from '../lib/activityPdf';
 
 export const activityPath = (id: string) => `/practicar/${id}`;
 
@@ -35,14 +37,14 @@ export function FieldControl({ field, value, onChange, result }: { field: Activi
   const issue = result?.feedback.find(item => item.fieldId === field.id);
   const inputId = `activity-${field.id.replace(/[^a-z0-9]/gi, '-')}`;
   const baseProps = { id: inputId, name: field.id, value, onChange: (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => onChange(event.target.value), 'aria-invalid': issue?.status === 'error' || undefined, 'aria-describedby': issue ? `${inputId}-feedback` : undefined };
-  return <div className={`document-field${issue ? ' has-error' : ''}${field.validation === 'teacher' ? ' teacher-field' : ''}`}>
-    <label htmlFor={inputId}>{field.label}</label>
   if (field.calculated) return <div className={`document-field calculated-field${issue ? ' has-error' : ''}`}>
     <label htmlFor={inputId}>{field.label}</label>
     <input {...baseProps} type="text" readOnly aria-readonly="true" aria-live="polite" autoComplete="off" placeholder="Se calcula solo" />
     <small>{field.calculated === 'amount' ? 'Se calcula solo: cantidad × precio unitario.' : 'Se calcula solo: suma de los importes.'}</small>
     {issue && <span id={`${inputId}-feedback`} className="field-feedback">{issue.message}</span>}
   </div>;
+  return <div className={`document-field${issue ? ' has-error' : ''}${field.validation === 'teacher' ? ' teacher-field' : ''}`}>
+    <label htmlFor={inputId}>{field.label}</label>
     {field.kind === 'choice' ? <select {...baseProps}><option value="">Seleccioná una opción</option>{field.options?.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select> :
       <input {...baseProps} type="text" inputMode={field.kind === 'money' ? 'decimal' : field.kind === 'quantity' || field.kind === 'identifier' || field.kind === 'date' ? 'numeric' : undefined} autoComplete="off" placeholder={field.placeholder ?? (field.kind === 'money' ? '$ 0' : field.kind === 'date' ? 'DD/MM/AAAA' : '')} />}
     {issue && <span id={`${inputId}-feedback`} className="field-feedback">{issue.message}</span>}
@@ -104,6 +106,7 @@ function ActivityForm({ activity }: { activity: Activity }) {
     <ActivityDocument activity={activity} answers={answers} onAnswer={setAnswer} result={result} />
     {activity.teacherReviewNote && <div className="teacher-review"><strong>{activity.teacherReviewTitle ?? 'Campos pendientes de indicación docente'}</strong><p>{activity.teacherReviewNote.replace(/^TODO_TEACHER_CONFIRMATION:\s*/, '')}</p></div>}
     {result && <div className={`activity-feedback ${result.correct ? 'is-correct' : 'has-errors'}`} role="status" aria-live="polite"><strong>{result.correct ? result.needsTeacherReview ? 'Los campos verificables están correctos.' : '¡Muy bien! Completaste correctamente el documento.' : `Hay ${result.feedback.length} ${result.feedback.length === 1 ? 'campo para revisar' : 'campos para revisar'}.`}</strong><p>{result.correct ? result.needsTeacherReview ? 'Los campos señalados necesitan confirmación docente antes de dar por terminada la actividad.' : 'Tu progreso quedó guardado en este dispositivo.' : 'Encontrarás una pista debajo de cada campo que necesita corrección.'}</p></div>}
+    {record?.completed && <PdfActions buildModel={() => activityPdfModel(activity, answers, record.attempts)} />}
     <div className="activity-actions"><Button type="button" onClick={check}><SearchCheck size={18} /> COMPROBAR</Button><Button type="button" className="button-secondary" onClick={() => navigate(activity.nextId ? activityPath(activity.nextId) : '/practicar')}><Save size={18} /> GUARDAR Y CONTINUAR</Button>{result && !result.correct && <Button type="button" className="button-quiet" onClick={retry}><RotateCcw size={17} /> REINTENTAR</Button>}<Link className="button button-quiet" to={activity.theoryPath}><BookOpen size={18} /> VOLVER A LA TEORÍA</Link></div>
     {result?.correct && activity.nextId && <Link className="next-activity" to={activityPath(activity.nextId)}>SIGUIENTE ACTIVIDAD <ArrowRight size={18} /></Link>}
     {storageError && <p className="storage-warning" role="status">El navegador no permite guardar datos locales. El borrador podría perderse al actualizar.</p>}
