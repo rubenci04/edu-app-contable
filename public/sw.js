@@ -10,7 +10,7 @@ self.addEventListener('install', event => {
     await cache.put(shell, response.clone());
     const html = await response.text();
     const urls = [new URL('.', scope).href, new URL('manifest.webmanifest', scope).href,
-      new URL('icons/icon-192.png', scope).href, new URL('icons/icon-512.png', scope).href];
+      new URL('icons/icon-192.png', scope).href, new URL('icons/icon-512.png', scope).href, new URL('profesora.jpg', scope).href];
     for (const match of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
       const url = new URL(match[1], scope);
       if (url.origin === self.location.origin && !urls.includes(url.href)) urls.push(url.href);

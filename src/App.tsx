@@ -77,6 +77,25 @@ function AboutPage() {
   return <><PageHeader eyebrow="ACERCA DE" title="Acerca de Edu App Contable" description="Edu App Contable es una aplicación educativa para aprender, practicar y reforzar contenidos contables mediante teoría, actividades interactivas y juegos." /><Card className="about-card"><BookOpen size={27} aria-hidden="true" /><p>Este prototipo tiene fines educativos.</p><Link to="/" className="button button-quiet">Volver al inicio <ArrowRight size={18} /></Link></Card></>;
 }
 
+function StoryPage() {
+  return <article className="story-page">
+    <div className="page-header"><span className="eyebrow">NUESTRA HISTORIA</span><h1>Nuestra historia</h1></div>
+    <Card className="story-card">
+      <img className="story-photo" src="/profesora.jpg" alt="Profesora Fabiola Soledad Costilla" width="220" height="220" />
+      <div className="story-text">
+        <p>Mi nombre es Fabiola Soledad Costilla. Soy Profesora de Economía, Licenciada en Tecnología Educativa, cuento con un Posgrado en Educación y Nuevas Tecnologías y actualmente me encuentro finalizando la Maestría en Tecnología Educativa en la Universidad Abierta Interamericana (UAI).</p>
+        <p>A lo largo de mi trayectoria docente he buscado integrar los contenidos propios de Economía y Contabilidad con herramientas tecnológicas que permitan generar experiencias de aprendizaje más dinámicas, accesibles y significativas para los estudiantes.</p>
+        <h2>¿Por qué surge la App Contable?</h2>
+        <p>La idea de crear esta aplicación surge a partir de la observación de algunas dificultades que presentan los estudiantes al momento de comprender y aplicar ciertos contenidos contables, especialmente los relacionados con documentos comerciales, patrimonio, Activo, Pasivo y Patrimonio Neto.</p>
+        <p>Frente a esta necesidad, se pensó en una propuesta que pudiera combinar la explicación teórica con actividades prácticas y recursos interactivos, utilizando la tecnología como un apoyo para complementar la enseñanza en el aula.</p>
+        <h2>¿Cómo la utilizan los alumnos?</h2>
+        <p>Los estudiantes utilizan la aplicación para consultar contenidos teóricos, resolver actividades prácticas, completar documentos comerciales a partir de distintas situaciones y participar de un juego interactivo con preguntas, retroalimentación y puntaje.</p>
+        <p>De esta manera, la App Contable busca que los alumnos puedan aprender, practicar y poner a prueba sus conocimientos de una forma más participativa e interactiva, favoreciendo la relación entre la teoría y la práctica.</p>
+      </div>
+    </Card>
+  </article>;
+}
+
 export function App() {
   const location = useLocation();
   const { profile, saveProfile, storageError: profileStorageError } = useLocalStudent();
@@ -90,7 +109,7 @@ export function App() {
   const currentPatrimony = isPatrimonyRoute ? getPatrimonyActivity(location.pathname.split('/')[3]) : undefined;
   useEffect(() => {
     const section = sections.find(item => item.path === location.pathname);
-    document.title = `${currentLesson?.title ?? currentActivity?.title ?? currentPatrimony?.title ?? section?.nav ?? (location.pathname === '/' ? 'Inicio' : location.pathname === '/acerca-de' ? 'Acerca de' : 'Página no encontrada')} · Edu App Contable`;
+    document.title = `${currentLesson?.title ?? currentActivity?.title ?? currentPatrimony?.title ?? section?.nav ?? (location.pathname === '/' ? 'Inicio' : location.pathname === '/acerca-de' ? 'Acerca de' : location.pathname === '/nuestra-historia' ? 'Nuestra historia' : 'Página no encontrada')} · Edu App Contable`;
     window.scrollTo({ top: 0, behavior: 'instant' });
     if (initialPath.current !== location.pathname) mainRef.current?.focus({ preventScroll: true });
     initialPath.current = location.pathname;
@@ -100,7 +119,7 @@ export function App() {
     <a href="#main" className="skip-link">Saltar al contenido</a>
     <header className="site-header"><div className="header-inner"><Link className="brand" to="/" aria-label="Edu App Contable, inicio"><span className="brand-mark"><GraduationCap size={24} /></span><span>Edu App <strong>Contable</strong><small>APRENDER PARA AVANZAR</small></span></Link><nav aria-label="Navegación principal" className="desktop-nav"><NavLink to="/" end><Home size={17} /> Inicio</NavLink>{sections.map(({ path, nav, icon: Icon }) => <NavLink key={path} to={path}><Icon size={17} />{nav}</NavLink>)}</nav><span className="header-badge"><span /> Hola, {profile.name}</span></div></header>
     <main id="main" ref={mainRef} tabIndex={-1} className="main-container">
-      <div className="breadcrumb"><Link to="/">Inicio</Link>{isLessonRoute ? <><ChevronRight size={14} /><Link to="/aprender">Aprender</Link><ChevronRight size={14} /><span aria-current="page">{currentLesson?.title ?? 'Tema no encontrado'}</span></> : isActivityRoute || isPatrimonyRoute ? <><ChevronRight size={14} /><Link to="/practicar">Practicar</Link><ChevronRight size={14} /><span aria-current="page">{currentActivity?.title ?? currentPatrimony?.title ?? 'Actividad no encontrada'}</span></> : location.pathname !== '/' ? <><ChevronRight size={14} /><span>{location.pathname === '/acerca-de' ? 'Acerca de' : sections.find(item => item.path === location.pathname)?.nav ?? 'Página no encontrada'}</span></> : <><ChevronRight size={14} /><span>Tu espacio</span></>}</div>
+      <div className="breadcrumb"><Link to="/">Inicio</Link>{isLessonRoute ? <><ChevronRight size={14} /><Link to="/aprender">Aprender</Link><ChevronRight size={14} /><span aria-current="page">{currentLesson?.title ?? 'Tema no encontrado'}</span></> : isActivityRoute || isPatrimonyRoute ? <><ChevronRight size={14} /><Link to="/practicar">Practicar</Link><ChevronRight size={14} /><span aria-current="page">{currentActivity?.title ?? currentPatrimony?.title ?? 'Actividad no encontrada'}</span></> : location.pathname !== '/' ? <><ChevronRight size={14} /><span>{location.pathname === '/acerca-de' ? 'Acerca de' : location.pathname === '/nuestra-historia' ? 'Nuestra historia' : sections.find(item => item.path === location.pathname)?.nav ?? 'Página no encontrada'}</span></> : <><ChevronRight size={14} /><span>Tu espacio</span></>}</div>
       {location.pathname !== '/' && <Link to={isLessonRoute ? '/aprender' : isActivityRoute || isPatrimonyRoute ? '/practicar' : '/'} className="back-link"><ArrowLeft size={16} />{isLessonRoute ? 'Volver a los temas' : isActivityRoute || isPatrimonyRoute ? 'Volver a Practicamos' : 'Volver al inicio'}</Link>}
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -112,10 +131,11 @@ export function App() {
         <Route path="/jugar" element={<PlayPage />} />
         <Route path="/progreso" element={<ProgressPage profile={profile} saveProfile={saveProfile} profileStorageError={profileStorageError} />} />
         <Route path="/acerca-de" element={<AboutPage />} />
+        <Route path="/nuestra-historia" element={<StoryPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </main>
-    <footer className="site-footer"><span><GraduationCap size={17} /> Edu App Contable</span><p>Un espacio para aprender, a tu ritmo.</p><Link to="/acerca-de">Acerca de</Link><span className="footer-version">Prototipo local · v0.1</span><small className="footer-credit">© {new Date().getFullYear()} · Programador: Rubén E. Albarracín · Todos los derechos reservados.</small></footer>
+    <footer className="site-footer"><span><GraduationCap size={17} /> Edu App Contable</span><p>Un espacio para aprender, a tu ritmo.</p><Link to="/acerca-de">Acerca de</Link><Link to="/nuestra-historia">Nuestra historia</Link><span className="footer-version">Prototipo local · v0.1</span><small className="footer-credit">Developer: Rubén E. Albarracín</small></footer>
     <nav aria-label="Navegación móvil" className="mobile-nav"><NavLink to="/" end><Home size={21} /><span>Inicio</span></NavLink>{sections.map(({ path, nav, icon: Icon }) => <NavLink key={path} to={path}><Icon size={21} /><span>{nav}</span></NavLink>)}</nav>
   </div>;
 }
