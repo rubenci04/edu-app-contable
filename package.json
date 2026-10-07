@@ -7,19 +7,21 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build && node scripts/prepare_pwa.mjs",
     "preview": "vite preview --host 127.0.0.1",
-    "check:variants": "node scripts/check-variants.mjs"
+    "check:variants": "node scripts/check-variants.mjs",
+    "spike:auth": "node scripts/spike-auth-email.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.3",
+    "lucide-react": "^0.468.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-router-dom": "^7.9.1",
-    "lucide-react": "^0.468.0"
+    "react-router-dom": "^7.9.1"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.1.13",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.3",
-    "@tailwindcss/vite": "^4.1.13",
     "tailwindcss": "^4.1.13",
     "typescript": "~5.9.2",
     "vite": "^7.1.7"

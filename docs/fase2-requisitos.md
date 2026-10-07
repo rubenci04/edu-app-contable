@@ -416,6 +416,15 @@ No vienen de las decisiones tomadas: son mi propuesta para cubrir huecos.
 
 Sin respuesta todavía. **No se asumió ninguna.** El modelo de datos soporta cualquiera de las opciones.
 
+**Estado del paso 0: las cuatro quedan PENDIENTES A PROPÓSITO** (nadie las respondió; no se inventa una respuesta). Lo que bloquea cada una:
+
+| Pregunta | Estado | Bloquea |
+|---|---|---|
+| P-1 ranking por curso o general | Pendiente | Paso 10 (ranking) |
+| P-2 nombre completo o de pila | Pendiente | Paso 10 (ranking) |
+| P-3 consentimiento (UAI y escuela) | Pendiente | Paso 13 (piloto con alumnos). Hasta entonces, solo datos ficticios o la propia docente |
+| P-4 reinicio y mejor puntaje | Pendiente | Paso 8 (sincronización) y S-03 |
+
 **P-1. ¿El ranking es por curso o general?**
 - *Por curso:* `get_top_scores()` filtra por el curso del alumno que consulta (tope de 10 por curso).
 - *General:* devuelve el top 10 de los ~250 alumnos, lo que mezcla cursos.
@@ -457,6 +466,14 @@ Cada paso es un bloque independiente, con su propia verificación y su propio co
 | 12 | Exportación CSV | Botón en el panel | El archivo abre bien en Excel, con tildes y columnas correctas |
 | 13 | Piloto con **un** curso (requiere P-3 resuelta) | Informe del piloto | Sin errores de RLS ni de sync; uso del plan gratuito dentro de límites |
 | 14 | Operación: cuándo se pausa el proyecto, respaldo manual, cierre de año, guía para la docente | Documento de operación | La docente puede dar de alta un alumno, restablecer una clave y exportar sin ayuda |
+
+**Avance**
+
+| # | Estado |
+|---|---|
+| 0 | Hecho: P-1 a P-4 marcadas como pendientes a propósito (ver §8) |
+| 1 | Preparado: `scripts/spike-auth-email.mjs` (`npm run spike:auth`) prueba `@campus.local` y, si lo rechaza, `@alumnos.invalid`. **Resultado pendiente de registrar** (lo ejecuta el responsable del proyecto: crea un usuario descartable y hay que borrarlo desde el panel). La parte "usuario por Edge Function" queda para el paso 4, porque requiere la clave secreta del proyecto, que no se usa en este repositorio |
+| 6 (parcial) | Adelantado solo lo mínimo: dependencia `@supabase/supabase-js`, `.env.example`, `.env.local` ignorado por git y `src/lib/supabase.ts` (carga diferida; sin variables devuelve `null` y la app sigue en modo Fase 1). Todavía ningún componente lo usa |
 
 **Dependencias:** 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → (9, 10, 11) → 12 → 13 → 14. Los pasos 0 y 1 pueden hacerse en paralelo. El paso 13 es el único que depende de P-3.
 
