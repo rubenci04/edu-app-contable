@@ -246,7 +246,9 @@ h1,h2,h3,p { margin: 0; }
 .document-field input:focus,.document-field select:focus { outline: 3px solid var(--pastel); border-color: var(--primary); }
 .document-field.has-error input,.document-field.has-error select { border-color: var(--bad-strong); }
 .field-feedback { display: block; margin-top: 7px; font-size: 11px; line-height: 1.6; color: var(--bad-text); }
-.teacher-field small { color: var(--ink-soft); font-size: 10px; line-height: 1.6; margin-top: 7px; }
+.document-field input[readonly] { background: #fdf3f7; border-style: dashed; font-weight: 650; cursor: default; }
+.document-field input[readonly]:focus { outline-offset: 0; }
+.calculated-field small,.teacher-field small { color: var(--ink-soft); font-size: 10px; line-height: 1.6; margin-top: 7px; }
 .document-item { min-width: 0; position: relative; padding: 18px; border: 1px solid var(--border); border-radius: 12px; margin: 0 0 15px; background: var(--surface); }
 .document-item legend { padding: 0 8px; font-size: 12px; font-weight: 700; color: var(--primary-hover); }
 .item-index { display: none; }

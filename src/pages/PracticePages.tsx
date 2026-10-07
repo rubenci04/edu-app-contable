@@ -6,7 +6,7 @@ import { Button, Card, PageHeader } from '../components/ui';
 import { activities, allActivityFields, getActivity } from '../data/activities';
 import type { Activity, ActivityField, Answers, ValidationResult } from '../data/activityTypes';
 import { useLocalProgress } from '../hooks/useLocalProgress';
-import { validateActivity } from '../lib/activityValidation';
+import { calculatedCents, formatCents, validateActivity } from '../lib/activityValidation';
 import { patrimonyActivities, patrimonyPath } from '../data/patrimonyActivities';
 
 export const activityPath = (id: string) => `/practicar/${id}`;
@@ -37,6 +37,12 @@ export function FieldControl({ field, value, onChange, result }: { field: Activi
   const baseProps = { id: inputId, name: field.id, value, onChange: (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => onChange(event.target.value), 'aria-invalid': issue?.status === 'error' || undefined, 'aria-describedby': issue ? `${inputId}-feedback` : undefined };
   return <div className={`document-field${issue ? ' has-error' : ''}${field.validation === 'teacher' ? ' teacher-field' : ''}`}>
     <label htmlFor={inputId}>{field.label}</label>
+  if (field.calculated) return <div className={`document-field calculated-field${issue ? ' has-error' : ''}`}>
+    <label htmlFor={inputId}>{field.label}</label>
+    <input {...baseProps} type="text" readOnly aria-readonly="true" aria-live="polite" autoComplete="off" placeholder="Se calcula solo" />
+    <small>{field.calculated === 'amount' ? 'Se calcula solo: cantidad × precio unitario.' : 'Se calcula solo: suma de los importes.'}</small>
+    {issue && <span id={`${inputId}-feedback`} className="field-feedback">{issue.message}</span>}
+  </div>;
     {field.kind === 'choice' ? <select {...baseProps}><option value="">Seleccioná una opción</option>{field.options?.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select> :
       <input {...baseProps} type="text" inputMode={field.kind === 'money' ? 'decimal' : field.kind === 'quantity' || field.kind === 'identifier' || field.kind === 'date' ? 'numeric' : undefined} autoComplete="off" placeholder={field.placeholder ?? (field.kind === 'money' ? '$ 0' : field.kind === 'date' ? 'DD/MM/AAAA' : '')} />}
     {issue && <span id={`${inputId}-feedback`} className="field-feedback">{issue.message}</span>}
@@ -45,7 +51,12 @@ export function FieldControl({ field, value, onChange, result }: { field: Activi
 }
 
 function ActivityDocument({ activity, answers, onAnswer, result }: { activity: Activity; answers: Answers; onAnswer: (id: string, value: string) => void; result: ValidationResult | null }) {
-  const control = (field: ActivityField) => <FieldControl key={field.id} field={field} value={answers[field.id] ?? ''} onChange={value => onAnswer(field.id, value)} result={result} />;
+  const calculated = calculatedCents(activity, answers);
+  const control = (field: ActivityField) => {
+    const cents = field.calculated ? calculated[field.id] : undefined;
+    const value = field.calculated ? (cents == null ? '' : formatCents(cents)) : answers[field.id] ?? '';
+    return <FieldControl key={field.id} field={field} value={value} onChange={next => onAnswer(field.id, next)} result={result} />;
+  };
   const headCount = activity.headFieldCount ?? (activity.id === 'factura-a' ? 3 : 2);
   return <Card className="document-sheet">
     <div className="document-head"><div className="document-issuer"><strong>{activity.issuer.name}</strong>{activity.issuer.address && <span>{activity.issuer.address}</span>}{activity.issuer.taxId && <span>CUIT: {activity.issuer.taxId}</span>}</div><div className="document-type">{activity.documentMark && <span className="document-mark">{activity.documentMark}</span>}<strong>{activity.documentType}</strong></div></div>

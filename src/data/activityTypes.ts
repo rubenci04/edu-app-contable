@@ -12,6 +12,7 @@ export interface ActivityField {
   options?: { value: string; label: string }[];
   hint: string;
   placeholder?: string;
+  calculated?: 'amount' | 'total';
 }
 
 export interface ActivityItem {

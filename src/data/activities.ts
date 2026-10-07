@@ -31,7 +31,7 @@ const sharedRemitoItems = [
   item('item2', 'Artículo 2', 15, 'Block oficio de 80 hojas', 8000, ['Blocks oficio de 80 hojas', 'Block oficio 80 hojas']),
 ];
 
-export const activities: Activity[] = [
+const baseActivities: Activity[] = [
   {
     id: 'orden-de-compra', title: 'Orden de compra', documentType: 'ORDEN DE COMPRA', documentMark: 'X',
     source: 'DOCUMENTOS COMERCIALES PDF.pdf · Actividad N.º 1 · página 1',
@@ -240,5 +240,21 @@ export const activities: Activity[] = [
   },
 ];
 
-export const getActivity = (id: string | undefined) => activities.find(activity => activity.id === id);
+// Solo actividades sin IVA ni TODO_TEACHER_CONFIRMATION: importe = cantidad × precio unitario y total = suma de importes.
+const autoCalculatedIds = ['orden-de-compra', 'remito', 'factura-b'];
+const withAutoCalculation = (activity: Activity): Activity => ({
+  ...activity,
+  items: activity.items.map(line => ({
+    ...line,
+    fields: line.fields.map(field => field.id === `${line.id}.amount`
+      ? { ...field, calculated: 'amount' as const, hint: 'El importe se calcula solo. Revisá la cantidad y el precio unitario de este artículo.' }
+      : field),
+  })),
+  totals: activity.totals.map(field => field.id === 'total'
+    ? { ...field, calculated: 'total' as const, hint: 'El total se calcula solo. Revisá las cantidades y los precios unitarios de los artículos.' }
+    : field),
+});
+
+export const activities: Activity[] = baseActivities.map(activity => autoCalculatedIds.includes(activity.id) ? withAutoCalculation(activity) : activity);
+export const getActivity =(id: string | undefined) => activities.find(activity => activity.id === id);
 export const allActivityFields = (activity: Activity) => [...activity.fields, ...activity.items.flatMap(line => line.fields), ...activity.totals];

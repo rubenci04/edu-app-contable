@@ -40,8 +40,53 @@ function matches(field: ActivityField, raw: string): boolean {
   return [String(field.answer), ...(field.accepted ?? [])].some(answer => normalizeText(raw) === normalizeText(answer));
 }
 
+export function formatCents(cents: number): string {
+  const whole = String(Math.floor(cents / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const rest = cents % 100;
+  return `$${whole}${rest ? `,${String(rest).padStart(2, '0')}` : ''}`;
+}
+
+// Importe de cada fila (cantidad × precio) y total (suma de importes). null = falta algún dato.
+export function calculatedCents(activity: Activity, answers: Answers): Record<string, number | null> {
+  const result: Record<string, number | null> = {};
+  let sum = 0;
+  let any = false;
+  for (const line of activity.items) {
+    const amountField = line.fields.find(field => field.calculated === 'amount');
+    if (!amountField) continue;
+    const quantity = (answers[`${line.id}.quantity`] ?? '').trim();
+    const price = moneyToCents(answers[`${line.id}.unitPrice`] ?? '');
+    const product = /^\d+$/.test(quantity) && price !== null ? Number(quantity) * price : null;
+    const cents = product !== null && Number.isSafeInteger(product) ? product : null;
+    result[amountField.id] = cents;
+    if (cents !== null) { sum += cents; any = true; }
+  }
+  for (const field of activity.totals) if (field.calculated === 'total') result[field.id] = any && Number.isSafeInteger(sum) ? sum : null;
+  return result;
+}
+
+function withCalculatedAnswers(activity: Activity, answers: Answers): Answers {
+  const merged = { ...answers };
+  for (const [id, cents] of Object.entries(calculatedCents(activity, answers))) {
+    merged[id] = cents === null ? '' : `${Math.floor(cents / 100)}${cents % 100 ? `,${String(cents % 100).padStart(2, '0')}` : ''}`;
+  }
+  return merged;
+}
+
+function calculationInputs(activity: Activity, fieldId: string): string[] {
+  const lines = activity.items.filter(line => line.fields.some(field => field.calculated === 'amount'));
+  const inputs = (id: string) => [`${id}.quantity`, `${id}.unitPrice`];
+  const own = lines.find(line => `${line.id}.amount` === fieldId);
+  if (own) return inputs(own.id);
+  return activity.totals.some(field => field.id === fieldId && field.calculated === 'total') ? lines.flatMap(line => inputs(line.id)) : [];
+}
+
 export function validateActivity(activity: Activity, answers: Answers): ValidationResult {
-  return validateFields(allActivityFields(activity), answers, Boolean(activity.teacherReviewNote));
+  const result = validateFields(allActivityFields(activity), withCalculatedAnswers(activity, answers), Boolean(activity.teacherReviewNote));
+  const failing = new Set(result.feedback.map(item => item.fieldId));
+  // Un importe o total calculado no se marca aparte si ya se señala la cantidad o el precio que lo originan.
+  const feedback = result.feedback.filter(item => !calculationInputs(activity, item.fieldId).some(id => failing.has(id)));
+  return { ...result, feedback };
 }
 
 export function validateFields(fields: ActivityField[], answers: Answers, needsTeacherReview = false): ValidationResult {
