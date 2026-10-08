@@ -420,7 +420,7 @@ h1,h2,h3,p { margin: 0; }
 .variant-banner p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--ink-soft); overflow-wrap: anywhere; }
 .variant-actions { display: grid; gap: 10px; }
 .variant-actions .button, .variant-more .button { width: 100%; text-align: center; }
-.variant-more { margin: 0 0 20px; }
+.variant-more { margin: 16px 0 20px; }
 .variant-note { margin: 0 0 20px; padding: 13px 16px; border: 1px solid var(--bad-border); border-radius: 13px; background: var(--bad-bg); color: var(--bad-text); font-size: 13px; line-height: 1.6; }
 .extra-progress { font-weight: 650; color: var(--ink); }
 @media (min-width: 560px) { .variant-actions { display: flex; flex-wrap: wrap; } .variant-actions .button, .variant-more .button { width: auto; } }

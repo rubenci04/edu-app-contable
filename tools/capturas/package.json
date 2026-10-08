@@ -1,0 +1,12 @@
+{
+  "name": "capturas-informe",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "capturas": "node capturar.mjs",
+    "informe": "node armar-informe.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "^1.64.0"
+  }
+}

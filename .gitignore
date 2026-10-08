@@ -8,3 +8,7 @@ tmp/
 .env
 .env.local
 .env.*.local
+
+# Capturas e informe semanal (material de trabajo, no se suben)
+tools/capturas/node_modules/
+docs/evidencias/
